@@ -28,7 +28,7 @@ describe Sourcerer do
       end
 
       it 'should detect github shorthand repos' do
-        @sourcerer = Sourcerer.new 'brewster1134/sourceror'
+        @sourcerer = Sourcerer.new 'brewster1134/sourcerer'
         # expect(@sourcerer.source).to eq 'https://github.com/brewster1134/sourcerer.git'
         expect(@sourcerer.type).to eq :git
       end
