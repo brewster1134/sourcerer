@@ -2,6 +2,8 @@
 
 # sourcerer
 
+#### Dependencies
+* Ruby >= 1.9
 
 #### Usage
 Currently source types are:
