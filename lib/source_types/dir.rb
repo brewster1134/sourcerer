@@ -1,4 +1,2 @@
-class Sourcerer::Dir
-  def initialize source
-  end
+class Sourcerer::Dir < Sourcerer::SourceType
 end

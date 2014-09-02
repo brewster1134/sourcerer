@@ -1,51 +1,6 @@
 describe Sourcerer do
   before do
-    allow_any_instance_of(Sourcerer).to receive(:initialize_source_type)
-  end
-
-  # TEST FOR ALL TYPES HERE
-  #
-  describe '@type' do
-    context 'with a dir' do
-      it 'should detect local relative paths' do
-        @sourcerer = Sourcerer.new 'spec/fixtures/source.dir'
-        expect(@sourcerer.type).to eq :dir
-      end
-
-      it 'should detect local absolute paths' do
-        @sourcerer = Sourcerer.new File.expand_path('spec/fixtures/source.dir')
-        expect(@sourcerer.type).to eq :dir
-      end
-    end
-
-    context 'with a git repo' do
-      it 'should detect local git repos' do
-        @sourcerer = Sourcerer.new 'spec/fixtures/source.git'
-        expect(@sourcerer.type).to eq :git
-      end
-
-      it 'should detect remote git repos' do
-        @sourcerer = Sourcerer.new 'https://github.com/brewster1134/sourcerer.git'
-        expect(@sourcerer.type).to eq :git
-      end
-
-      it 'should detect github shorthand repos' do
-        @sourcerer = Sourcerer.new 'brewster1134/sourcerer'
-        expect(@sourcerer.type).to eq :git
-      end
-    end
-
-    context 'with a zip file' do
-      it 'should detect local zip files' do
-        @sourcerer = Sourcerer.new 'spec/fixtures/source.zip'
-        expect(@sourcerer.type).to eq :zip
-      end
-
-      it 'should detect remote zip files' do
-        @sourcerer = Sourcerer.new 'https://github.com/brewster1134/sourcerer/archive/master.zip'
-        expect(@sourcerer.type).to eq :zip
-      end
-    end
+    allow_any_instance_of(Sourcerer).to receive(:require_source_type).and_return true
   end
 
   describe '@tmp_dir' do
@@ -62,20 +17,66 @@ describe Sourcerer do
     end
   end
 
+  # TEST FOR ALL TYPES HERE
+  #
+  describe '#detect_type' do
+    context 'with a dir' do
+      it 'should detect local relative paths' do
+        @sourcerer = Sourcerer.new 'spec/fixtures/source.dir'
+        expect(@sourcerer.send(:detect_type)).to eq :dir
+      end
+
+      it 'should detect local absolute paths' do
+        @sourcerer = Sourcerer.new File.expand_path('spec/fixtures/source.dir')
+        expect(@sourcerer.send(:detect_type)).to eq :dir
+      end
+    end
+
+    context 'with a git repo' do
+      it 'should detect local git repos' do
+        @sourcerer = Sourcerer.new 'spec/fixtures/source.git'
+        expect(@sourcerer.send(:detect_type)).to eq :git
+      end
+
+      it 'should detect remote git repos' do
+        @sourcerer = Sourcerer.new 'https://github.com/brewster1134/sourcerer.git'
+        expect(@sourcerer.send(:detect_type)).to eq :git
+      end
+
+      it 'should detect github shorthand repos' do
+        @sourcerer = Sourcerer.new 'brewster1134/sourcerer'
+        expect(@sourcerer.send(:detect_type)).to eq :git
+      end
+    end
+
+    context 'with a zip file' do
+      it 'should detect local zip files' do
+        @sourcerer = Sourcerer.new 'spec/fixtures/source.zip'
+        expect(@sourcerer.send(:detect_type)).to eq :zip
+      end
+
+      it 'should detect remote zip files' do
+        @sourcerer = Sourcerer.new 'https://github.com/brewster1134/sourcerer/archive/master.zip'
+        expect(@sourcerer.send(:detect_type)).to eq :zip
+      end
+    end
+  end
+
+  # Test common behavior for all supported source types
+  #
+  # All sources must have the following structure
+  #
+  # |_ bar
+  # | |_ file.bar
+  # |_ foo
+  # | |_ file.foo
+  # |_ .hidden_foo
+  #
   describe 'supported source types' do
     before do
-      allow_any_instance_of(Sourcerer).to receive(:initialize_source_type).and_call_original
+      allow_any_instance_of(Sourcerer).to receive(:require_source_type).and_call_original
     end
-    # Test common behavior for all supported source types
-    #
-    # All sources must have the following structure
-    #
-    # |_ bar
-    # | |_ file.bar
-    # |_ foo
-    # | |_ file.foo
-    # |_ .hidden_foo
-    #
+
     @test_sources = [
       'dir',
       'git',

@@ -2,16 +2,21 @@ require 'active_support/inflector'
 require 'open-uri'
 
 class Sourcerer
-  attr_reader :dest_dir, :source, :tmp_dir, :type
+  require 'source_type'
+  attr_reader :dest_dir, :source, :tmp_dir
+
+  #
+  def self.type= type; @type = type; end
+  def self.type; @type; end
 
   def initialize source, dest = nil
-    @type = detect_type source
     @source = source
     @tmp_dir = ::Dir.mktmpdir
     @dest_dir = dest || @tmp_dir
 
-    # find the right source type and require and initialize it
-    initialize_source_type @type
+    # require the source type library
+    type = detect_type
+    require_source_type type
   end
 
   def files glob = '**/*'
@@ -19,13 +24,13 @@ class Sourcerer
 
 private
 
-    def detect_type source
+    def detect_type
       # check if local directory that is not a git repo
-      if ::Dir.exists?(File.expand_path(source)) && source.match(/\.git$/).nil?
+      if ::Dir.exists?(File.expand_path(@source)) && @source.match(/\.git$/).nil?
         return :dir
       end
 
-      case source
+      case @source
       # Check extensions first
       #
       # git repo
@@ -44,8 +49,7 @@ private
       end
     end
 
-    def initialize_source_type type
+    def require_source_type type
       require "source_types/#{type}"
-      "Sourcerer::#{type.to_s.classify}".constantize.new @source
     end
 end
