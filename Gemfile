@@ -1,6 +1,8 @@
 source 'https://rubygems.org'
 
-gem 'activesupport', :require => false
+gem 'archive-zip', :require => false
+gem 'git', :require => false
+gem 'rubyzip', :require => false
 
 group :test do
   gem 'guard'

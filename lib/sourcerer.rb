@@ -1,29 +1,27 @@
-require 'active_support/inflector'
-require 'open-uri'
-
 class Sourcerer
-  require 'source_type'
-  attr_reader :dest_dir, :source, :tmp_dir
+  require 'sourcerer/source_type'
+  attr_reader :source, :destination
 
+  # Called from source_type when a new source type is inherited
   #
   def self.type= type; @type = type; end
-  def self.type; @type; end
+  def self.source; @source; end
+  def self.destination; @destination; end
 
-  def initialize source, dest = nil
+  def initialize source, destination = nil
     @source = source
-    @tmp_dir = ::Dir.mktmpdir
-    @dest_dir = dest || @tmp_dir
+    @destination = File.expand_path(destination || ::Dir.mktmpdir)
 
     # require the source type library
     type = detect_type
-    require_source_type type
-  end
-
-  def files glob = '**/*'
+    init_source_type type
   end
 
 private
 
+    # TODO: build towards support similar to bower
+    # http://bower.io/docs/api/#install
+    #
     def detect_type
       # check if local directory that is not a git repo
       if ::Dir.exists?(File.expand_path(@source)) && @source.match(/\.git$/).nil?
@@ -41,15 +39,14 @@ private
       when /.zip$/
         :zip
 
-      # Check special cases
-      #
       # github shorthand
       when /^[A-Za-z0-9-]+\/[A-Za-z0-9\-_.]+$/
         :git
       end
     end
 
-    def require_source_type type
+    def init_source_type type
       require "source_types/#{type}"
+      @type.new
     end
 end
