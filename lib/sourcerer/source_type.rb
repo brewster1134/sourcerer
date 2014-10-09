@@ -2,7 +2,7 @@ class Sourcerer::SourceType
   # Init a new source type and make accessible to the sourcerer class
   #
   def self.inherited klass
-    Sourcerer.type = klass
+    Sourcerer.addType klass
   end
 
   # Sourcerer class accessors

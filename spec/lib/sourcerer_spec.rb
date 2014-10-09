@@ -12,11 +12,11 @@ describe Sourcerer do
     expect(sourcerer).to have_received(:init_source_type)
   end
 
-  describe '@destination' do
+  describe '.destination' do
     context 'when no custom destination is passed' do
       it 'should return a valid directory' do
         sourcerer = Sourcerer.new 'foo_dir'
-        expect(Dir.exists?(sourcerer.var(:destination))).to be true
+        expect(Dir.exists?(Sourcerer.destination)).to be true
       end
     end
 
@@ -31,8 +31,18 @@ describe Sourcerer do
 
       it 'should return a valid directory' do
         sourcerer = Sourcerer.new 'foo_dir', './tmp/foo_destination'
-        expect(Dir.exists?(sourcerer.var(:destination))).to be true
+        expect(Dir.exists?(Sourcerer.destination)).to be true
       end
+    end
+  end
+
+  describe '#type' do
+    before do
+      @source = Sourcerer.new File.expand_path('.')
+    end
+
+    it 'should return the correct type' do
+      expect(@source.type).to eq :dir
     end
   end
 

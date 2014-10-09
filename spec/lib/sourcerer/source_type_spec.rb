@@ -11,9 +11,9 @@ describe Sourcerer::SourceType do
   #
   describe 'supported source types' do
     @test_sources = [
-      'dir',
-      'git',
-      'zip'
+      :dir,
+      :git,
+      :zip
     ]
 
     @test_sources.each do |test_source|
@@ -23,7 +23,7 @@ describe Sourcerer::SourceType do
           allow(Sourcerer).to receive(:destination).and_return ::Dir.mktmpdir
 
           require "sourcerer/source_types/#{test_source}"
-          @source_type = Sourcerer.instance_var(:type).new
+          @source_type = Sourcerer.class_var(:types)[test_source].new
           @basepath = Pathname.new(@source_type.destination)
         end
 
