@@ -7,16 +7,16 @@ describe Sourcerer do
     allow_any_instance_of(Sourcerer).to receive(:init_source_type).and_call_original
   end
 
-  it 'should call #init_source_type' do
-    sourcerer = Sourcerer.new 'foo_dir'
-    expect(sourcerer).to have_received(:init_source_type)
+  it 'should call #create_source_type' do
+    sourcerer = Sourcerer.new 'spec/fixtures/source.dir'
+    expect(sourcerer).to have_received(:init_source_type).with :dir
   end
 
   describe '.destination' do
     context 'when no custom destination is passed' do
       it 'should return a valid directory' do
-        sourcerer = Sourcerer.new 'foo_dir'
-        expect(Dir.exists?(Sourcerer.destination)).to be true
+        sourcerer = Sourcerer.new 'spec/fixtures/source.dir'
+        expect(Dir.exists?(sourcerer.destination)).to be true
       end
     end
 
@@ -30,19 +30,21 @@ describe Sourcerer do
       end
 
       it 'should return a valid directory' do
-        sourcerer = Sourcerer.new 'foo_dir', './tmp/foo_destination'
-        expect(Dir.exists?(Sourcerer.destination)).to be true
+        sourcerer = Sourcerer.new 'spec/fixtures/source.dir', './tmp/foo_destination'
+        expect(Dir.exists?(sourcerer.destination)).to be true
       end
     end
   end
 
-  describe '#type' do
-    before do
-      @source = Sourcerer.new File.expand_path('.')
-    end
+  describe '#files' do
+    it 'should pass arguments to the source type' do
+      sourcerer = Sourcerer.new 'spec/fixtures/source.dir'
+      files_spy = spy('files')
+      sourcerer.var :type, files_spy
 
-    it 'should return the correct type' do
-      expect(@source.type).to eq :dir
+      sourcerer.files :all, false
+
+      expect(files_spy).to have_received(:files).with(:all, false)
     end
   end
 

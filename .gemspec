@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
   s.name = 'sourcerer_'
   s.summary = 'Consume remote sources with ease.'
-  s.version = '0.0.2'
+  s.version = '0.0.4'
   s.add_runtime_dependency 'archive-zip', '~> 0.7.0'
   s.add_runtime_dependency 'git', '~> 1.2.8'
   s.add_runtime_dependency 'rubyzip', '~> 1.1.6'

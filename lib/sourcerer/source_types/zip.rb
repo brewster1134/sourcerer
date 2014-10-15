@@ -1,7 +1,7 @@
-class Sourcerer::Zip < Sourcerer::SourceType
+class Sourcerer::SourceType::Zip < Sourcerer::SourceType
   require 'archive/zip'
 
-  def initialize
-    Archive::Zip.extract source, destination
+  def move
+    Archive::Zip.extract @source, @destination
   end
 end

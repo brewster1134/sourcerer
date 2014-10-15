@@ -1,7 +1,7 @@
-class Sourcerer::Git < Sourcerer::SourceType
+class Sourcerer::SourceType::Git < Sourcerer::SourceType
   require 'git'
 
-  def initialize
-    Git.clone source, destination
+  def move
+    ::Git.clone @source, @destination
   end
 end

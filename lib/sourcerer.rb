@@ -1,40 +1,42 @@
+require 'active_support/core_ext/string/inflections'
+require 'active_support/core_ext/hash/reverse_merge'
+require 'tmpdir'
+
 class Sourcerer
+  require 'sourcerer/interpolate'
   require 'sourcerer/source_type'
-  attr_reader :source, :destination
-  @@types = {}
 
-  # Called from source_type when a new source type is inherited
-  #
-  def self.addType klass
-    type = klass.name.split('::').last.downcase.to_sym
-    @@types[type] ||= klass
-  end
+  # requre all source types
+  Dir['source_types/*.rb'].each { |file| require file }
 
-  def self.source; @@source; end
-  def self.destination; @@destination; end
-  def type; @type; end
+  attr_reader :source, :destination, :type, :interpolation_data
 
-  def initialize source, destination = nil
-    @@source = source
-    @@destination = File.expand_path(destination || ::Dir.mktmpdir)
-
-    # require the source type library
-    @type = detect_type
-    init_source_type
-  end
+  # pass method through to source type
+  def files *args; @type.files *args; end
 
 private
+
+    def initialize source, destination = nil, interpolation_data = {}
+      @source = source
+      @destination = File.expand_path(destination || ::Dir.mktmpdir)
+      @type = init_source_type detect_type
+      @interpolation_data = interpolation_data
+    end
+
+    def init_source_type type
+      "Sourcerer::SourceType::#{type.to_s.classify}".constantize.new self
+    end
 
     # TODO: build towards support similar to bower
     # http://bower.io/docs/api/#install
     #
     def detect_type
       # check if local directory that is not a git repo
-      if ::Dir.exists?(File.expand_path(@@source)) && @@source.match(/\.git$/).nil?
+      if ::Dir.exists?(File.expand_path(@source)) && @source.match(/\.git$/).nil?
         return :dir
       end
 
-      case @@source
+      case @source
       # Check extensions first
       #
       # git repo
@@ -48,11 +50,9 @@ private
       # github shorthand
       when /^[A-Za-z0-9-]+\/[A-Za-z0-9\-_.]+$/
         :git
-      end
-    end
 
-    def init_source_type
-      require "sourcerer/source_types/#{@type}"
-      @@types[@type].new
+      else
+        raise Exception, "No type could be detected from `#{@source}`\nPlease make sure it is a valid directory or matches one of the supported source types."
+      end
     end
 end

@@ -1,3 +1,5 @@
+require 'active_support/core_ext/string/inflections'
+
 describe Sourcerer::SourceType do
   # Test common behavior for all supported source types
   #
@@ -10,29 +12,26 @@ describe Sourcerer::SourceType do
   # |_ .hidden_foo
   #
   describe 'supported source types' do
-    @test_sources = [
+    source_types = [
       :dir,
       :git,
       :zip
     ]
 
-    @test_sources.each do |test_source|
-      describe test_source do
+    source_types.each do |source_type|
+      describe source_type do
         before do
-          allow(Sourcerer).to receive(:source).and_return "spec/fixtures/source.#{test_source}"
-          allow(Sourcerer).to receive(:destination).and_return ::Dir.mktmpdir
+          require "sourcerer/source_types/#{source_type}"
+          dbl = double({
+            source: "spec/fixtures/source.#{source_type}",
+            destination: ::Dir.mktmpdir,
+            interpolation_data: {}
+          })
 
-          require "sourcerer/source_types/#{test_source}"
-          @source_type = Sourcerer.class_var(:types)[test_source].new
-          @basepath = Pathname.new(@source_type.destination)
+          @source_type = "Sourcerer::SourceType::#{source_type.to_s.classify}".constantize.new dbl
         end
 
-        after do
-          allow(Sourcerer).to receive(:source).and_call_original
-          allow(Sourcerer).to receive(:destination).and_call_original
-        end
-
-        it 'should set the type' do
+        it 'should inherit from SourceType' do
           expect(@source_type.class.superclass).to eq Sourcerer::SourceType
         end
 
@@ -44,11 +43,7 @@ describe Sourcerer::SourceType do
 
         describe '#files' do
           it 'should list all files' do
-            relative_files = @source_type.files.map do |file|
-              Pathname.new(file).relative_path_from(@basepath).to_s
-            end
-
-            expect(relative_files).to match_array([
+            expect(@source_type.files(:all, true)).to match_array([
               'foo/file.foo',
               'bar/file.bar',
               '.hidden_foo'
@@ -56,11 +51,7 @@ describe Sourcerer::SourceType do
           end
 
           it 'should list only matching files' do
-            relative_files = @source_type.files('**/*.foo').map do |file|
-              Pathname.new(file).relative_path_from(@basepath).to_s
-            end
-
-            expect(relative_files).to match_array [
+            expect(@source_type.files('**/*.foo', true)).to match_array [
               'foo/file.foo'
             ]
           end

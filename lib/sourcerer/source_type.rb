@@ -1,16 +1,22 @@
 class Sourcerer::SourceType
-  # Init a new source type and make accessible to the sourcerer class
-  #
-  def self.inherited klass
-    Sourcerer.addType klass
+  include Sourcerer::Interpolate
+  attr_reader :source, :destination
+
+  def initialize sourcerer
+    @source = sourcerer.source
+    @destination = sourcerer.destination
+    @interpolation_data = sourcerer.interpolation_data
+
+    # runs source type specific `move` method to get files from the source to the destination
+    move
+
+    # interpolate any neccessary files
+    interpolate
   end
 
-  # Sourcerer class accessors
+  # Return an array of file paths that match the provided glob
   #
-  def source; Sourcerer.source; end
-  def destination; Sourcerer.destination; end
-
-  def files glob = :all
+  def files glob = :all, relative = false
     glob = case glob
     when :all
       '**/{.[^\.]*,*}'
@@ -20,6 +26,17 @@ class Sourcerer::SourceType
       glob
     end
 
-    Dir.glob(File.join(destination, glob)).select{ |file| File.file? file }
+    files = ::Dir.glob(File.join(@destination, glob)).select do |file|
+      File.file? file
+    end
+
+    if relative
+      base_path = Pathname.new @destination
+      files = files.collect do |file|
+        Pathname.new(file).relative_path_from(base_path).to_s
+      end
+    end
+
+    return files
   end
 end
