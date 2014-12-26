@@ -24,8 +24,7 @@ describe Sourcerer::SourceType do
           require "sourcerer/source_types/#{source_type}"
           dbl = double({
             source: "spec/fixtures/source.#{source_type}",
-            destination: ::Dir.mktmpdir,
-            interpolation_data: {}
+            destination: ::Dir.mktmpdir
           })
 
           @source_type = "Sourcerer::SourceType::#{source_type.to_s.classify}".constantize.new dbl

@@ -1,17 +1,12 @@
 class Sourcerer::SourceType
-  include Sourcerer::Interpolate
   attr_reader :source, :destination
 
   def initialize sourcerer
     @source = sourcerer.source
     @destination = sourcerer.destination
-    @interpolation_data = sourcerer.interpolation_data
 
     # runs source type specific `move` method to get files from the source to the destination
     move
-
-    # interpolate any neccessary files
-    interpolate
   end
 
   # Return an array of file paths that match the provided glob

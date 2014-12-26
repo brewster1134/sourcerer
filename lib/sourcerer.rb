@@ -1,26 +1,23 @@
 require 'active_support/core_ext/string/inflections'
-require 'active_support/core_ext/hash/reverse_merge'
 require 'tmpdir'
 
 class Sourcerer
-  require 'sourcerer/interpolate'
   require 'sourcerer/source_type'
 
   # requre all source types
   Dir['source_types/*.rb'].each { |file| require file }
 
-  attr_reader :source, :destination, :type, :interpolation_data
+  attr_reader :source, :destination, :type
 
   # pass method through to source type
   def files *args; @type.files *args; end
 
 private
 
-    def initialize source, destination = nil, interpolation_data = {}
+    def initialize source, destination = nil
       @source = source
       @destination = File.expand_path(destination || ::Dir.mktmpdir)
       @type = init_source_type detect_type
-      @interpolation_data = interpolation_data
     end
 
     def init_source_type type
