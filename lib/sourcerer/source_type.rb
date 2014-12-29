@@ -1,6 +1,9 @@
 class Sourcerer::SourceType
   attr_reader :source, :destination
 
+  # requre all source types
+  Dir[File.join(File.dirname(__FILE__), 'source_types', '*.rb')].each { |file| require file }
+
   def initialize sourcerer
     @source = sourcerer.source
     @destination = sourcerer.destination

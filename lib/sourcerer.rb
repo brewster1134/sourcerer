@@ -4,10 +4,9 @@ require 'tmpdir'
 class Sourcerer
   require 'sourcerer/source_type'
 
-  # requre all source types
-  Dir['source_types/*.rb'].each { |file| require file }
-
   attr_reader :source, :destination, :type
+
+  GIT_GITHUB_SHORTHAND_REGEX = /^[A-Za-z0-9-]+\/[A-Za-z0-9\-_.]+$/
 
   # pass method through to source type
   def files *args; @type.files *args; end
@@ -45,7 +44,7 @@ private
         :zip
 
       # github shorthand
-      when /^[A-Za-z0-9-]+\/[A-Za-z0-9\-_.]+$/
+      when GIT_GITHUB_SHORTHAND_REGEX
         :git
 
       else
