@@ -28,7 +28,7 @@ source = Sourcerer.new 'brewster1134/sourcerer', '~/Downloads'
 ###### Install Dependencies
 ```sh
 gem install yuyi
-yuyi -m https://raw.githubusercontent.com/brewster1134/sourcerer/master/yuyi_menu
+yuyi -m https://raw.githubusercontent.com/brewster1134/sourcerer/master/Yuyifile
 ```
 
 ##### Running Tests

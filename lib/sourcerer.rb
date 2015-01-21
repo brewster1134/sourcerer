@@ -29,6 +29,7 @@ private
     def detect_type
       # check if local directory that is not a git repo
       if ::Dir.exists?(File.expand_path(@source)) && @source.match(/\.git$/).nil?
+        @source = File.expand_path(@source)
         return :dir
       end
 
