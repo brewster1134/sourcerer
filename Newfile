@@ -1,0 +1,23 @@
+---
+sources:
+  default: brewster1134/yuyi-rolls
+name: Sourcerer
+version: 0.0.7
+tasks:
+  changelog:
+  gem:
+    name: sourcerer_
+    summary: Consume remote sources with ease.
+    files:
+    - bin/**/*
+    - lib/**/*
+    authors:
+    - Ryan Brewster
+    licenses:
+    - MIT
+    gemspec:
+      homepage: https://github.com/brewster1134/sourcerer
+  git:
+    remotes:
+    - repo: origin
+      branch: master

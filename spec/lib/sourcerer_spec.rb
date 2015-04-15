@@ -30,7 +30,7 @@ describe Sourcerer do
       end
 
       it 'should return a valid directory' do
-        sourcerer = Sourcerer.new 'spec/fixtures/source.dir', './tmp/foo_destination'
+        sourcerer = Sourcerer.new 'spec/fixtures/source.dir', :destination => './tmp/foo_destination'
         expect(Dir.exists?(sourcerer.destination)).to be true
       end
     end
@@ -40,7 +40,7 @@ describe Sourcerer do
     it 'should pass arguments to the source type' do
       sourcerer = Sourcerer.new 'spec/fixtures/source.dir'
       files_spy = spy('files')
-      sourcerer.var :type, files_spy
+      sourcerer.instance_var :type, files_spy
 
       sourcerer.files :all, false
 

@@ -1,10 +1,11 @@
+require 'active_support/core_ext/hash/deep_merge'
 require 'active_support/core_ext/string/inflections'
 require 'tmpdir'
 
 class Sourcerer
   require 'sourcerer/source_type'
 
-  attr_reader :source, :destination, :type
+  attr_reader :source, :destination, :options, :type
 
   GIT_GITHUB_SHORTHAND_REGEX = /^[A-Za-z0-9-]+\/[A-Za-z0-9\-_.]+$/
 
@@ -13,9 +14,14 @@ class Sourcerer
 
 private
 
-    def initialize source, destination = nil
+    def initialize source, options = {}
+      @options = {
+        :destination => nil,
+        :subdirectory => nil
+      }.deep_merge! options
+
       @source = source
-      @destination = File.expand_path(destination || ::Dir.mktmpdir)
+      @destination = File.expand_path(@options[:destination] || ::Dir.mktmpdir)
       @type = init_source_type detect_type
     end
 
@@ -46,6 +52,7 @@ private
 
       # github shorthand
       when GIT_GITHUB_SHORTHAND_REGEX
+        @source = "git@github.com:#{@source}.git"
         :git
 
       else

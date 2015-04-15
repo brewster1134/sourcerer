@@ -7,9 +7,15 @@ class Sourcerer::SourceType
   def initialize sourcerer
     @source = sourcerer.source
     @destination = sourcerer.destination
+    @options = sourcerer.options
 
     # runs source type specific `move` method to get files from the source to the destination
     move
+
+    # append subdirectory if it exists
+    if @options[:subdirectory]
+      @destination = File.join @destination, @options[:subdirectory]
+    end
   end
 
   # Return an array of file paths that match the provided glob
