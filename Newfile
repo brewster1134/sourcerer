@@ -2,9 +2,9 @@
 sources:
   default: brewster1134/yuyi-rolls
 name: Sourcerer
-version: 0.0.7
+version: 1.0.0
 tasks:
-  changelog:
+  changelog: 
   gem:
     name: sourcerer_
     summary: Consume remote sources with ease.
