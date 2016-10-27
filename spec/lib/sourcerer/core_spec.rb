@@ -1,6 +1,7 @@
 describe Sourcerer::Core do
   before do
     @core_instance = Sourcerer::Core.allocate
+    @error_instance = Sourcerer::Error.allocate
   end
 
   describe '#initialize' do
@@ -17,12 +18,13 @@ describe Sourcerer::Core do
       allow(@core_instance).to receive(:get_type_class).and_return Foo
       allow(Foo).to receive(:new).and_return Bar.new
 
-      @core = @core_instance.send :initialize, 'source', 'destination'
+      @core = @core_instance.send :initialize, 'source', 'destination', {}
     end
 
     after do
       allow(@core_instance).to receive(:get_type_source).and_call_original
       allow(@core_instance).to receive(:get_type_class).and_call_original
+      allow(File).to receive(:extname).and_call_original
     end
 
     it 'should initialize the proper source type' do
@@ -78,6 +80,16 @@ describe Sourcerer::Core do
           source: source[:source_out]
         )
       end
+    end
+
+    it 'should raise an error if not source could be determined' do
+      allow(File).to receive(:extname).and_return nil
+      allow(Sourcerer::Error).to receive(:new).and_return @error_instance
+
+      expect{ @core_instance.get_type_source('foo') }.to raise_error @error_instance
+
+      allow(File).to receive(:extname).and_call_original
+      allow(Sourcerer::Error).to receive(:new).and_call_original
     end
   end
 

@@ -1,15 +1,4 @@
 describe Sourcerer::SourceType do
-  # Test common behavior for all supported source types
-  #
-  # All sources must have the following structure
-  #
-  # |_ bar
-  # | |_ file.bar
-  # |_ foo
-  # | |_ file.foo
-  # |_ .hidden_foo
-  #
-
   before do
     class Sourcerer::SourceType::Foo < Sourcerer::SourceType
       def move source, destination, options
@@ -107,6 +96,14 @@ describe Sourcerer::SourceType do
     end
   end
 
+  # Test supported local source types
+  # All sources must have the following structure
+  # |_ bar
+  # | |_ file.bar
+  # |_ foo
+  # | |_ file.foo
+  # |_ .hidden_foo
+  #
   describe 'supported local source types' do
     source_types = {
       dir: 'spec/fixtures/source.dir',

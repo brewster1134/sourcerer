@@ -11,7 +11,7 @@ class Sourcerer::Core
   # @param destination  [String]  A local path to copy the source to, nil
   # @return [Sourcerer::SourceType[TYPE]]
   #
-  def initialize source, destination, options = {}
+  def initialize source, destination, options
     # get absolute path of destination
     destination = File.expand_path(destination)
 
@@ -45,14 +45,9 @@ class Sourcerer::Core
 
     # => local file
     elsif File.exist?(expanded_source)
+      case File.extname(expanded_source)
 
       # => local zip file
-      case File.extname(expanded_source)
-      when '.git'
-        type_source = {
-          type: :dir,
-          source: expanded_source
-        }
       when '.zip'
         type_source = {
           type: :zip,

@@ -2,6 +2,10 @@ require 'coveralls'
 Coveralls.wear!
 require 'sourcerer'
 
+I18n.load_path << File.expand_path(File.join('spec', 'fixtures', 'i18n.yml'))
+I18n.locale = 'spec'
+I18n.reload!
+
 def root *paths
   paths.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..'))).compact.join '/'
 end

@@ -3,7 +3,9 @@ en: &en
     core:
 
     errors:
-      convert: No supported type could be determined from `%{source}`. Make sure the source is in a supported format.
+      core:
+        get_type_source:
+          no_type_detected: No supported type could be determined from `%{source}`. Make sure the source is in a supported format.
 
 # regional variations
 en_gb:
