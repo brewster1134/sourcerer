@@ -2,6 +2,10 @@ describe Sourcerer::Core do
   before do
     @core_instance = Sourcerer::Core.allocate
     @error_instance = Sourcerer::Error.allocate
+    @source_type_instance = Sourcerer::SourceType.allocate
+
+    allow(@core_instance).to receive(:source_type).and_return @source_type_instance
+    allow(@source_type_instance).to receive(:files)
   end
 
   describe '#initialize' do
@@ -101,6 +105,14 @@ describe Sourcerer::Core do
       @type_class = @core_instance.get_type_class :foo
 
       expect(@type_class).to eq Sourcerer::SourceType::Foo
+    end
+  end
+
+  describe '#files' do
+    it 'should call files on source type' do
+      @core_instance.files :glob, false
+
+      expect(@source_type_instance).to have_received(:files).with :glob, false
     end
   end
 end

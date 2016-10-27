@@ -1,4 +1,4 @@
 module Sourcerer
-  VERSION = '0.0.1'.freeze
-  SUMMARY = 'Collect data from various sources'.freeze
+  VERSION = '0.0.1.pre'.freeze
+  SUMMARY = 'Consume local & remote sources with ease'.freeze
 end

@@ -16,6 +16,16 @@ describe Sourcerer::SourceType do
 
       expect(@foo_source_type).to have_received(:move).with 'source', 'destination', foo: 'foo'
     end
+
+    context 'when destination directory already exists' do
+      it 'should raise an error' do
+        allow(Dir).to receive(:exist?).and_return true
+
+        expect{ @foo_source_type.send(:initialize, 'source', 'destination', foo: 'foo') }.to raise_error Sourcerer::Error
+
+        allow(Dir).to receive(:exist?).and_call_original
+      end
+    end
   end
 
   describe '#files' do
@@ -114,7 +124,7 @@ describe Sourcerer::SourceType do
     source_types.each do |type, source|
       describe "#{type} source from #{source}" do
         before do
-          @tmp_dir = Dir.mktmpdir
+          @tmp_dir = File.join Dir.mktmpdir, type.to_s
           @source_type = "Sourcerer::SourceType::#{type.to_s.classify}".constantize.new source, @tmp_dir, {}
         end
 

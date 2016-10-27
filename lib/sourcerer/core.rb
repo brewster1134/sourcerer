@@ -4,7 +4,7 @@
 #
 class Sourcerer::Core
   GIT_GITHUB_SHORTHAND_REGEX = %r{^[A-Za-z0-9-]+\/[A-Za-z0-9\-_.]+$}
-  attr_reader :source
+  attr_reader :source_type
 
   # Initialize a new sourcerer core object
   # @param source       [String]  A valid source location or supported shorthand
@@ -20,7 +20,7 @@ class Sourcerer::Core
     type = type_source[:type]
     source = type_source[:source]
     type_class = get_type_class type
-    type_class.new source, destination, options
+    @source_type = type_class.new source, destination, options
   end
 
   # Determine the type of source based on a string
@@ -90,5 +90,11 @@ class Sourcerer::Core
   #
   def get_type_class type
     "Sourcerer::SourceType::#{type.to_s.classify}".constantize
+  end
+
+  # @see Sourcerer::SourceType#files
+  #
+  def files *args
+    source_type.files *args
   end
 end

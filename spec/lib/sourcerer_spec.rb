@@ -1,9 +1,15 @@
 describe Sourcerer do
-  it 'should allow calling new on root namespace' do
+  before do
     allow(Sourcerer::Core).to receive(:new)
 
-    Sourcerer.new 'source', 'destination', foo: 'foo'
+    @sourcerer = Sourcerer.new 'source', 'destination', foo: 'foo'
+  end
 
+  after do
+    allow(Sourcerer::Core).to receive(:new).and_call_original
+  end
+
+  it 'should allow .new on namespace' do
     expect(Sourcerer::Core).to have_received(:new).with 'source', 'destination', foo: 'foo'
   end
 end

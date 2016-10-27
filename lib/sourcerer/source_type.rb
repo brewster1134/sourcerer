@@ -6,8 +6,15 @@ class Sourcerer::SourceType
   def initialize source, destination, options
     @destination = destination
 
+    # raise error if destination already exists
+    if ::Dir.exist? @destination
+      raise Sourcerer::Error.new 'source_type.initialize.destination_already_exists', destination: @destination
+    end
+
     # calls the custom `move` method for the given type
     move source, destination, options
+
+    self
   end
 
   # Return an array of file paths that match the provided glob
