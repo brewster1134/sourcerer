@@ -3,6 +3,7 @@ PATH
   specs:
     sourcerer_ (0.0.1)
       activesupport (= 4.2.7.1)
+      git
       i18n
       rubyzip
 
@@ -27,6 +28,7 @@ GEM
     docile (1.1.5)
     ffi (1.9.14)
     formatador (0.2.5)
+    git (1.3.0)
     guard (2.14.0)
       formatador (>= 0.2.4)
       listen (>= 2.7, < 4.0)
