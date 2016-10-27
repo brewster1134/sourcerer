@@ -1,0 +1,12 @@
+en: &en
+  sourcerer:
+    core:
+
+    errors:
+      convert: No supported type could be determined from `%{source}`. Make sure the source is in a supported format.
+
+# regional variations
+en_gb:
+  <<: *en
+en_us:
+  <<: *en

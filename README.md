@@ -20,7 +20,7 @@ gem install sourcerer_
 #### Quick Usage
 ```ruby
 require 'sourcerer'
-source = Sourcerer.new 'brewster1134/sourcerer', :destination => '~/Documents'
+source = Sourcerer.new 'brewster1134/sourcerer', destination: '~/Documents'
 source.files '**/spec_helper.rb'
 => ["spec/spec_helper.rb"]
 ```
