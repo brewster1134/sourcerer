@@ -7,22 +7,23 @@ rvm:
 deploy:
   - provider: releases
     skip_cleanup: true
-    api_key:
-      secure:
+    file_glob: true
     file:
-      - bin/sourcerer
       - i18n/*.yml
       - lib/**/*.rb
+      - CHANGELOG.md
       - README.md
+    api_key:
+      secure: T82NpMoMYEEZQKz9a8O7qHRtuPC6u2cxfDuacD60hbwmFQ+INsJz3k9T6stmUUjEWyZDLwjtex6LaUnTftURvvvrkMtCLWleGJBXK2IhPAh3nTqh0I87j49FrTyytRhO4oN8bX8+M8C22fyNwN/VJiHYrfbKgvgh2manXWBNhCQ=
     on:
       repo: brewster1134/sourcerer
       tags: true
   - provider: rubygems
-    gem: sourcerer
+    gem: sourcerer_
     gemspec: sourcerer.gemspec
     skip_cleanup: true
     api_key:
-      secure:
+      secure: guXzjSL1dN/gEYTCHMGofh9jA55Yzx9Um+TkoXidUTR8O84kAoL1sgd6zWOxmJuJFZnXadcQpNW3hts7Ab2oJBBad9w4XaGPh136c+NwRukNqbPxKfpHePMFQLkFnRFW3mc0b+zDSK4iMAbxUO3SUlGG4PuHr7sbu78F4cNokN4=
     on:
       branch: master
       repo: brewster1134/sourcerer
