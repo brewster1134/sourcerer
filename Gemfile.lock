@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    sourcerer_ (0.0.1.pre)
+    sourcerer_ (0.0.2.pre)
       activesupport (= 4.2.7.1)
       git
       i18n
