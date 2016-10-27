@@ -24,7 +24,7 @@ deploy:
     gemspec: sourcerer.gemspec
     skip_cleanup: true
     api_key:
-      secure: guXzjSL1dN/gEYTCHMGofh9jA55Yzx9Um+TkoXidUTR8O84kAoL1sgd6zWOxmJuJFZnXadcQpNW3hts7Ab2oJBBad9w4XaGPh136c+NwRukNqbPxKfpHePMFQLkFnRFW3mc0b+zDSK4iMAbxUO3SUlGG4PuHr7sbu78F4cNokN4=
+      secure: G+N9t4WbGO3WAbEhX/LpmpS5tCv+56CgV5X56D5fw1J1AhBW0TX6gbg0bvF7XVGmsIx1pq6/tbADB569RSRqUUA4lPA505zQBrU6gmKQJ+9rQ1dHqPvNVuLKxKGGpkZZyH4XLTtmI8hCFM7J9iuYD4MXD9bzYwx35fR5qe8JLqk=
     on:
       branch: master
       repo: brewster1134/sourcerer
