@@ -17,6 +17,7 @@ deploy:
       secure: T82NpMoMYEEZQKz9a8O7qHRtuPC6u2cxfDuacD60hbwmFQ+INsJz3k9T6stmUUjEWyZDLwjtex6LaUnTftURvvvrkMtCLWleGJBXK2IhPAh3nTqh0I87j49FrTyytRhO4oN8bX8+M8C22fyNwN/VJiHYrfbKgvgh2manXWBNhCQ=
     on:
       repo: brewster1134/sourcerer
+      ruby: 2.0.0-p247
       tags: true
   - provider: rubygems
     gem: sourcerer_
@@ -27,4 +28,5 @@ deploy:
     on:
       branch: master
       repo: brewster1134/sourcerer
+      ruby: 2.0.0-p247
       tags: true
