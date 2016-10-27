@@ -1,6 +1,29 @@
 language: ruby
-install: bundle install --without development
+install: bundle install
 script: bundle exec rspec
 rvm:
-  - 1.9.3-p550
-  - 2.0.0-p195
+  - 2.0.0-p247
+  - 2.3.1
+deploy:
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure:
+    file:
+      - bin/sourcerer
+      - i18n/*.yml
+      - lib/**/*.rb
+      - README.md
+    on:
+      repo: brewster1134/sourcerer
+      tags: true
+  - provider: rubygems
+    gem: sourcerer
+    gemspec: sourcerer.gemspec
+    skip_cleanup: true
+    api_key:
+      secure:
+    on:
+      branch: master
+      repo: brewster1134/sourcerer
+      tags: true

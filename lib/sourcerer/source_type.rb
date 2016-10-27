@@ -1,21 +1,20 @@
+#
+# Sourcerer::SourceType
+# Base class for supported source types
+#
 class Sourcerer::SourceType
-  attr_reader :source, :destination
+  def initialize source, destination, options
+    @destination = destination
 
-  # requre all source types
-  Dir[File.join(File.dirname(__FILE__), 'source_types', '*.rb')].each { |file| require file }
-
-  def initialize sourcerer
-    @source = sourcerer.source
-    @destination = sourcerer.destination
-    @options = sourcerer.options
-
-    # runs source type specific `move` method to get files from the source to the destination
-    move
-
-    # append subdirectory if it exists
-    if @options[:subdirectory]
-      @destination = File.join @destination, @options[:subdirectory]
+    # raise error if destination already exists
+    if ::Dir.exist? @destination
+      raise Sourcerer::Error.new 'source_type.initialize.destination_already_exists', destination: @destination
     end
+
+    # calls the custom `move` method for the given type
+    move source, destination, options
+
+    self
   end
 
   # Return an array of file paths that match the provided glob
@@ -23,14 +22,14 @@ class Sourcerer::SourceType
   def files glob = :all, relative = false
     glob = case glob
     when :all
-      '**/{.[^\.]*,*}'
+      '**/*'
     when :hidden
-      '**/.*}'
+      '**/.*'
     else
       glob
     end
 
-    files = ::Dir.glob(File.join(@destination, glob)).select do |file|
+    files = ::Dir.glob(File.join(@destination, glob), File::FNM_DOTMATCH).select do |file|
       File.file? file
     end
 
@@ -41,6 +40,6 @@ class Sourcerer::SourceType
       end
     end
 
-    return files
+    files
   end
 end

@@ -2,23 +2,9 @@ require 'coveralls'
 Coveralls.wear!
 require 'sourcerer'
 
-class Object
-  def class_var var, value = nil
-    if value.nil?
-      self.send(:class_variable_get, :"@@#{var}")
-    else
-      self.send(:class_variable_set, :"@@#{var}", value)
-    end
-  end
-
-  def instance_var var, value = nil
-    if value.nil?
-      self.send(:instance_variable_get, :"@#{var}")
-    else
-      self.send(:instance_variable_set, :"@#{var}", value)
-    end
-  end
-end
+I18n.load_path << File.expand_path(File.join('spec', 'fixtures', 'i18n.yml'))
+I18n.locale = 'spec'
+I18n.reload!
 
 def root *paths
   paths.unshift(File.expand_path(File.join(File.dirname(__FILE__), '..'))).compact.join '/'
@@ -26,8 +12,8 @@ end
 
 # See http://rubydoc.info/gems/rspec-core/RSpec/Core/Configuration
 RSpec.configure do |config|
-# The settings below are suggested to provide a good initial experience
-# with RSpec, but feel free to customize to your heart's content.
+  # The settings below are suggested to provide a good initial experience
+  # with RSpec, but feel free to customize to your heart's content.
 
   # These two settings work together to allow you to limit a spec run
   # to individual examples or groups you care about by tagging them with
