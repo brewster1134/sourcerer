@@ -5,10 +5,11 @@
 [![coverage](https://coveralls.io/repos/brewster1134/sourcerer/badge.svg?branch=master)](https://coveralls.io/r/brewster1134/sourcerer?branch=master)
 [![code climate](https://codeclimate.com/github/brewster1134/sourcerer/badges/gpa.svg)](https://codeclimate.com/github/brewster1134/sourcerer)
 
-[![omniref](https://www.omniref.com/github/brewster1134/sourcerer.png)](https://www.omniref.com/github/brewster1134/sourcerer)
-
 # SOURCERER
-Consume remote sources with ease.
+###### Consume local & remote sources with ease
+---
+
+From inside a ruby app, you can quickly grab entire directories of assets, either locally from a zip file or folder, or remotely from a git repo or zip file.
 
 ---
 #### Install
@@ -20,8 +21,12 @@ gem install sourcerer_
 #### Quick Usage
 ```ruby
 require 'sourcerer'
-source = Sourcerer.new 'brewster1134/sourcerer', destination: '~/Documents'
-source.files '**/spec_helper.rb'
+
+# download a remote github repo to your Documents folder
+source = Sourcerer.new 'brewster1134/sourcerer', '~/Documents/sourcerer'
+
+# use file globbing to return a custom array of files
+source.files '**/*_helper.rb'
 => ["spec/spec_helper.rb"]
 ```
 
@@ -32,20 +37,27 @@ source.files '**/spec_helper.rb'
   * github shorthand _(see example)_
 * zip files
   * local or remote
-* local directories _(not very helpful)_
+* local directories _(although not very useful)_
   * relative or absolute paths
+
+---
+#### Roadmap
+* Command line tool
+* Automate consuming multiple sources with a sourcerer.yaml file
+* Support for branches, tags & commits from a git repo
 
 ---
 #### Development
 ###### Install Dependencies
 ```shell
-gem install yuyi
-yuyi -m https://raw.githubusercontent.com/brewster1134/sourcerer/master/Yuyifile
-bundle install
-```
+# clone repo
+git clone https://github.com/brewster1134/sourcerer.git
+cd sourcerer
 
-###### Tests
-```shell
+# install dependencies
+bundle install
+
+# run watcher for linting and tests
 bundle exec guard
 ```
 
