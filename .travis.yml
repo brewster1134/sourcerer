@@ -4,7 +4,21 @@ script: bundle exec rspec
 rvm:
   - 2.0.0-p247
   - 2.3.1
+before_install:
+  - gem update --system
+  - gem install bundler
+before_deploy: bundle exec gem build sourcerer.gemspec
 deploy:
+  - provider: releases
+    skip_cleanup: true
+    file_glob: true
+    file: sourcerer_*.gem
+    api_key:
+      secure: T82NpMoMYEEZQKz9a8O7qHRtuPC6u2cxfDuacD60hbwmFQ+INsJz3k9T6stmUUjEWyZDLwjtex6LaUnTftURvvvrkMtCLWleGJBXK2IhPAh3nTqh0I87j49FrTyytRhO4oN8bX8+M8C22fyNwN/VJiHYrfbKgvgh2manXWBNhCQ=
+    on:
+      repo: brewster1134/sourcerer
+      ruby: 2.0.0-p247
+      tags: true
   - provider: rubygems
     gem: sourcerer_
     gemspec: sourcerer.gemspec
