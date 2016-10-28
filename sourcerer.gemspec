@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'activesupport', '4.2.7.1'
   s.add_runtime_dependency 'git'
   s.add_runtime_dependency 'i18n'
+  s.add_runtime_dependency 'rb-readline'
   s.add_runtime_dependency 'rubyzip'
 
   s.add_development_dependency 'coveralls'
