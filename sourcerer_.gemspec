@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.author      = 'Ryan Brewster'
   s.date        = Date.today.to_s
   s.email       = 'brewster1134+rubygems@gmail.com'
-  s.files       = Dir['i18n/*.yml', 'lib/**/*.rb', 'CHANGELOG.md', 'README.md']
+  s.files       = Dir['{i18n,lib}/**/*', 'CHANGELOG.md', 'README.md']
   s.homepage    = 'https://github.com/brewster1134/sourcerer'
   s.license     = 'WTFPL'
   s.name        = 'sourcerer_'
