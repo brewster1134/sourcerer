@@ -7,7 +7,8 @@ class Sourcerer::Error < StandardError
   # @param i18n_args_hash [Hash]    Object of values to pass to i18n
   # @return [Sourcerer::Error]
   #
-  def initialize i18n_keys, i18n_args_hash
-    I18n.t "sourcerer.errors.#{i18n_keys}", i18n_args_hash
+  def initialize i18n_keys, i18n_args_hash = {}
+    error = I18n.t "sourcerer.error.#{i18n_keys}", i18n_args_hash
+    super error
   end
 end

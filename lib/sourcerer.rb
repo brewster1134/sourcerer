@@ -3,7 +3,7 @@ require 'i18n'
 require 'tmpdir'
 
 # I18n
-I18n.load_path += Dir[File.expand_path(File.join('i18n', '*.yml'))]
+I18n.load_path += Dir[File.expand_path(File.join(__dir__, '..', 'i18n', '*.yml'))]
 I18n.locale = ENV['LANG'].split('.').first.downcase
 I18n.reload!
 
@@ -24,6 +24,6 @@ require 'sourcerer/metadata'
 require 'sourcerer/source_type'
 
 # Requre all source types
-Dir[File.join(Dir.pwd, 'lib', 'sourcerer', 'source_types', '*.rb')].each do |file|
+Dir[File.join(__dir__, 'sourcerer', 'source_types', '*.rb')].each do |file|
   require file
 end

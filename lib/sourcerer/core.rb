@@ -92,9 +92,14 @@ class Sourcerer::Core
     "Sourcerer::SourceType::#{type.to_s.classify}".constantize
   end
 
+  # API Methods
   # @see Sourcerer::SourceType#files
   #
   def files *args
     source_type.files *args
+  end
+  
+  def path
+    source_type.path
   end
 end

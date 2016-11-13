@@ -1,6 +1,6 @@
 en: &en
   sourcerer:
-    errors:
+    error:
       core:
         get_type_source:
           no_type_detected: No supported type could be determined from `%{source}`. Make sure the source is in a supported format.

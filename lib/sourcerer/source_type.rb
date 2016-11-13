@@ -3,12 +3,14 @@
 # Base class for supported source types
 #
 class Sourcerer::SourceType
+  attr_reader :path
+  
   def initialize source, destination, options
-    @destination = destination
+    @path = destination
 
     # raise error if destination already exists
-    if ::Dir.exist? @destination
-      raise Sourcerer::Error.new 'source_type.initialize.destination_already_exists', destination: @destination
+    if ::Dir.exist? @path
+      raise Sourcerer::Error.new 'source_type.initialize.destination_already_exists', destination: @path
     end
 
     # calls the custom `move` method for the given type
@@ -29,12 +31,12 @@ class Sourcerer::SourceType
       glob
     end
 
-    files = ::Dir.glob(File.join(@destination, glob), File::FNM_DOTMATCH).select do |file|
+    files = ::Dir.glob(File.join(@path, glob), File::FNM_DOTMATCH).select do |file|
       File.file? file
     end
 
     if relative
-      base_path = Pathname.new @destination
+      base_path = Pathname.new @path
       files = files.collect do |file|
         Pathname.new(file).relative_path_from(base_path).to_s
       end
