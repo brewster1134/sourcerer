@@ -1,0 +1,16 @@
+en: &en
+  sourcerer:
+    cli:
+      install:
+        description: Install a package
+        options:
+          version:
+            description: Specify the version to install
+      help:
+        description: Show all commands or get information on a specific one
+
+# regional variations
+en_gb:
+  <<: *en
+en_us:
+  <<: *en
