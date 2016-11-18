@@ -1,0 +1,10 @@
+spec:
+  sourcerer:
+    errors:
+      install:
+        multiple_packages_found: multiple_packages_found %{package} %{source_types}
+    
+    cli:
+      install:
+        installing_package: installing_package %{package} %{source} %{destination}
+        multiple_packages_found: multiple_packages_found

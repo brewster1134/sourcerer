@@ -1,14 +1,23 @@
 en: &en
   sourcerer:
+    errors:
+      install:
+        multiple_packages_found: Multiple sources for %{package} were found. Pass the `source:` option and set it to one of the available sources %{source_types}
     cli:
       install:
         description: Install a package
+        installing_package: Installing %{package} from %{source} to %{destination}
+        multiple_packages_found: Multiple sources for %{package} were found. Choose which location to install from
         options:
+          destination:
+            description: Specify the directory to install packages to
+          source:
+            description: Specify the source type to install from
           version:
             description: Specify the version to install
       help:
         description: Show all commands or get information on a specific one
-
+  
 # regional variations
 en_gb:
   <<: *en
