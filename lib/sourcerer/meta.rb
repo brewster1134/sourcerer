@@ -1,5 +1,4 @@
 module Sourcerer
-  VERSION = '0.0.1'
-  SUMMARY = 'A package manager'
+  VERSION = '0.0.1'.freeze
+  SUMMARY = 'A package manager'.freeze
 end
-  
