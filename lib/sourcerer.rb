@@ -22,7 +22,7 @@ module Sourcerer
 
     if packages.length > 1
       package_types = packages.collect { |package| package.type.to_s }.join(', ')
-      raise Sourcerer::Error.new 'install.multiple_packages_found', package: package_name, types: package_types
+      raise Sourcerer::Error.new 'sourcerer.install.multiple_packages_found', package_name: package_name, types: package_types
     else
       packages[0].install
     end

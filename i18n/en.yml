@@ -1,13 +1,20 @@
 en: &en
   sourcerer:
     errors:
-      install:
-        multiple_packages_found: "Multiple packages for %{package} were found. Set the `type:` option for the package you want: %{types}"
+      sourcerer:
+        install:
+          multiple_packages_found: "Multiple packages for %{package_name} were found. Set the `type:` option for the package you want: %{types}"
+      package:
+        search:
+          any_type:
+            no_packages_found: "%{package_name} with version %{version} could not not be found. Verify the package name & version"
+          single_type:
+            no_package_found: "%{package_name} with version %{version} could not not be found using %{type}. Verify the package name & version, or try a different type"
     cli:
       install:
         description: Install a package
-        installing_package: Installing %{package} from %{type} to %{destination}
-        multiple_packages_found: Multiple packages for %{package} were found. Choose which type to install from...
+        installing_package: Installing %{package_name} from %{type} to %{destination}
+        multiple_packages_found: Multiple packages for %{package_name} were found. Choose which type to install from...
         options:
           destination:
             description: Specify the directory to install packages to
