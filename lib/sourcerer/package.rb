@@ -40,7 +40,7 @@ module Sourcerer
       # FileUtils.cp_r source, destination
     end
 
-    # Download method needs defined for each package type class in the respective packages/[TYPE].rb file
+    # `download` & `search` method needs defined in the package type class in their respective packages/[TYPE].rb file
     #
     def download
       raise Sourcerer::Error.new 'package.download.download_method_not_defined', package_type: self.type
@@ -87,6 +87,6 @@ module Sourcerer
   end
 
   module Packages
-    Dir[File.join(__dir__, 'packages', '*.rb')].each { |file| require file }
+    Dir[File.join(__dir__, 'package_types', '*.rb')].each { |file| require file }
   end
 end
