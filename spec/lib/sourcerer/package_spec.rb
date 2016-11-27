@@ -1,4 +1,13 @@
 RSpec.describe Sourcerer::Package do
+  describe '#search_for_package' do
+    before do
+      # Sourcerer::Package.class_variable_set(:@@subclasses, subclasses)
+    end
+
+    it 'should search each package type for the version' do
+    end
+  end
+
   describe '.inherited' do
     before do
       allow(Sourcerer::Package).to receive(:add_subclass)
@@ -150,7 +159,7 @@ RSpec.describe Sourcerer::Package do
     end
   end
 
-  describe '#install' do
+  describe '#download' do
     skip
   end
 end

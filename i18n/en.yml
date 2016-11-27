@@ -3,7 +3,8 @@ en: &en
     errors:
       sourcerer:
         install:
-          multiple_packages_found: "Multiple packages for %{package_name} were found. Set the `type:` option for the package you want: %{types}"
+          multiple_packages_found: "Multiple packages for %{package_name} were found. Set `type` to one of the following types: %{package_types}"
+          no_package_found: "No package for %{package_name} was found. Check that the package name, version and/or type are correct"
       package:
         search:
           any_type:
@@ -14,7 +15,9 @@ en: &en
       install:
         description: Install a package
         installing_package: Installing %{package_name} from %{type} to %{destination}
-        multiple_packages_found: Multiple packages for %{package_name} were found. Choose which type to install from...
+        multiple_packages_found: Multiple packages for %{package_name} were found. Choose the type to install from...
+        no_package_found: "No package for %{package_name} was found. Check that the package name, version and/or type are correct"
+        success: Installation Complete
         options:
           destination:
             description: Specify the directory to install packages to

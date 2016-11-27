@@ -16,7 +16,7 @@ module Sourcerer
       key ? @@subclasses[key] : @@subclasses
     end
 
-    def self.search package_name, version:, type:
+    def self.search package_name:, version:, type:
       packages = []
 
       # search all package types
@@ -58,8 +58,11 @@ module Sourcerer
       @found
     end
 
-    # def install
-    # end
+    def copy destination:
+    end
+
+    def download
+    end
   end
 
   module Packages

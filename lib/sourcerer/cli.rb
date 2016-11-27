@@ -11,20 +11,30 @@ module Sourcerer
     option :destination, aliases: '-d', default: File.join(Dir.pwd, 'sourcerer_packages'), desc: I18n.t('sourcerer.cli.install.options.destination.description')
     def install package_name
       # search for package
-      packages = Sourcerer::Package.search package_name, version: options[:version], type: options[:type]
+      packages = Sourcerer::Package.search package_name: package_name, version: options[:version], type: options[:type]
 
-      # prompt user to choose a package if multiple are found
-      package = if packages.length > 1
+      # if a single package is found, continue
+      if packages.length == 1
+        package = packages.first
+
+      # if multiple packages are found, prompt user to choose a package type
+      elsif packages.length > 1
         packages_hash = Hash[packages.collect{ |package| [package.type, package] }]
         selected_package = A.sk I18n.t('sourcerer.cli.install.multiple_packages_found', package_name: package_name.green), type: :multiple_choice, choices: packages_hash, max: 1
-        selected_package.values[0]
-      else
-        packages[0]
+        package = selected_package.values.first
+
+      # if no packages are found, show user an error and exit
+      elsif packages.length == 0
+        S.ay I18n.t('sourcerer.cli.install.no_package_found', package_name: package_name), preset: :sourcerer_error
+        return
       end
 
-      # install the package
-      S.ay I18n.t('sourcerer.cli.install.installing_package', package_name: package_name.green, type: package.type.green, destination: options[:destination].green)
-      package.install
+      # download & install package
+      S.ay I18n.t('sourcerer.cli.install.installing_package', package_name: package_name.green, type: options[:type].to_s.green, destination: options[:destination].green), preset: :sourcerer_success
+      package.download
+      package.copy destination: options[:destination]
+
+      S.ay I18n.t('sourcerer.cli.install.success'), preset: :sourcerer_success
     end
 
     desc 'help [COMMAND]', I18n.t('sourcerer.cli.help.description')

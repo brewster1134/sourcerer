@@ -3,7 +3,8 @@ spec:
     errors:
       sourcerer:
         install:
-          multiple_packages_found: multiple_packages_found %{package_name} %{types}
+          multiple_packages_found: multiple_packages_found %{package_name} %{package_types}
+          no_package_found: no_package_found %{package_name}
       package:
         search:
           any_type:
@@ -14,3 +15,4 @@ spec:
       install:
         installing_package: installing_package %{package_name} %{type} %{destination}
         multiple_packages_found: multiple_packages_found %{package_name}
+        no_package_found: no_package_found %{package_name}
