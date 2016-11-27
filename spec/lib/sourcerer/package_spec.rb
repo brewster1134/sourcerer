@@ -1,3 +1,18 @@
+# Basic package type sanity check
+RSpec.describe Sourcerer::Packages do
+  Sourcerer::Package.class_variable_get(:@@subclasses).each do |package_type, package_class|
+    describe package_class do
+      it 'should define a download method' do
+        expect(package_class.instance_methods(false)).to include :download
+      end
+
+      it 'should define a search method' do
+        expect(package_class.instance_methods(false)).to include :search
+      end
+    end
+  end
+end
+
 RSpec.describe Sourcerer::Package do
   #
   # PUBLIC CLASS METHODS
