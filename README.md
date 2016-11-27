@@ -2,7 +2,9 @@
 A package manager
 ---
 ### Feature Roadmap
-* Support a manifest `sourcerer.yml`
+* Support a global Configuration `~/.sourcerer_config.yml`
+* Support caching remote sources `~/.sourcerer_cache.yml`
+* Support a project manifest `./sourcerer.yml`
 * Type:
   * bower https://github.com/bower/registry
     * `jquery`

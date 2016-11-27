@@ -19,7 +19,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'cli_miami', '>0'
   s.add_runtime_dependency 'i18n', '>0'
   s.add_runtime_dependency 'semantic', '>0'
-  s.add_runtime_dependency 'thor', '0.19.1' # '>0'
+  s.add_runtime_dependency 'thor', '>0'
 
   s.add_development_dependency 'coveralls', '>0'
   s.add_development_dependency 'guard', '>0'

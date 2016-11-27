@@ -6,7 +6,10 @@ en: &en
           multiple_packages_found: "Multiple packages for %{package_name} were found. Set `type` to one of the following types: %{package_types}"
           no_package_found: "No package for %{package_name} was found. Check that the package name, version and/or type are correct"
       package:
+        download:
+          download_method_not_defined: No download method defined for package type %{package_type}
         search:
+          search_method_not_defined: No seach method defined for package type %{package_type}
           any_type:
             no_packages_found: "%{package_name} with version %{version} could not not be found. Verify the package name & version"
           single_type:
