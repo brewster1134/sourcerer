@@ -6,13 +6,15 @@ RSpec.describe Sourcerer do
 
         allow(@package).to receive(:copy)
         allow(@package).to receive(:download)
-        allow(Sourcerer::Package).to receive(:search).and_return [@package]
+        allow(Sourcerer::Package).to receive(:search).and_return({
+          success: [@package]
+        })
 
         @sourcerer_install = Sourcerer.install 'package_foo', destination: 'packages_dir', version: '1.2.3', type: 'foo_type'
       end
 
       it 'should install the package in the right order' do
-        expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: 'foo_type').ordered
+        expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: :foo_type).ordered
         expect(@package).to have_received(:download).ordered
         expect(@package).to have_received(:copy).with(destination: 'packages_dir').ordered
       end
@@ -25,7 +27,9 @@ RSpec.describe Sourcerer do
 
         allow(@package_one).to receive(:type).and_return 'foo_type'
         allow(@package_two).to receive(:type).and_return 'bar_type'
-        allow(Sourcerer::Package).to receive(:search).and_return [@package_one, @package_two]
+        allow(Sourcerer::Package).to receive(:search).and_return({
+          success: [@package_one, @package_two]
+        })
 
         @sourcerer_install = ->{ Sourcerer.install 'package_foo', destination: 'packages_dir', version: '1.2.3', type: :any }
       end
@@ -37,13 +41,30 @@ RSpec.describe Sourcerer do
 
     context 'when no packages are found' do
       before do
-        allow(Sourcerer::Package).to receive(:search).and_return []
+        @package = Sourcerer::Package.allocate
+        @error = Sourcerer::Error.allocate
+
+        allow(@error).to receive(:message).and_return 'package error'
+        allow(@package).to receive(:errors).and_return [@error]
+        allow(S).to receive(:ay)
+        allow(Sourcerer::Package).to receive(:search).and_return({
+          success: [],
+          fail: [@package]
+        })
 
         @sourcerer_install = ->{ Sourcerer.install 'package_foo', destination: 'packages_dir', version: '1.2.3', type: :any }
       end
 
+      after do
+        allow(S).to receive(:ay).and_call_original
+      end
+
       it 'should raise an error' do
-        expect{ @sourcerer_install[] }.to raise_error Sourcerer::Error, 'no_package_found package_foo'
+        expect{ @sourcerer_install[] }.to raise_error { |error|
+          expect(S).to have_received(:ay).with 'package error', Hash
+          expect(error).to be_a Sourcerer::Error
+          expect(error.message).to eq 'no_package_found package_foo'
+        }
       end
     end
   end

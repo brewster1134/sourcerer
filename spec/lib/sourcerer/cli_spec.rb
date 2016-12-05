@@ -19,7 +19,9 @@ RSpec.describe Sourcerer::Cli do
         allow(@package).to receive(:copy)
         allow(@package).to receive(:download)
         allow(@package).to receive(:type)
-        allow(Sourcerer::Package).to receive(:search).and_return [@package]
+        allow(Sourcerer::Package).to receive(:search).and_return({
+          success: [@package]
+        })
 
         @cli.options = { version: '1.2.3', type: 'foo_type', destination: 'packages_dir' }
         @cli.install 'package_foo'
@@ -29,7 +31,7 @@ RSpec.describe Sourcerer::Cli do
         expect(A).to_not have_received(:sk)
         expect(@package).to_not have_received(:type)
 
-        expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: 'foo_type').ordered
+        expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: :foo_type).ordered
         expect(@package).to have_received(:download).ordered
         expect(@package).to have_received(:copy).with(destination: 'packages_dir').ordered
       end
@@ -47,9 +49,11 @@ RSpec.describe Sourcerer::Cli do
         allow(@package_two).to receive(:download)
         allow(@package_two).to receive(:type).and_return 'bar_type'
         allow(A).to receive(:sk).and_return('bar_type': @package_two)
-        allow(Sourcerer::Package).to receive(:search).and_return [@package_one, @package_two]
+        allow(Sourcerer::Package).to receive(:search).and_return({
+          success: [@package_one, @package_two]
+        })
 
-        @cli.options = { version: '1.2.3', type: :any, destination: 'packages_dir' }
+        @cli.options = { version: '1.2.3', type: 'any', destination: 'packages_dir' }
         @cli.install 'package_foo'
       end
 
@@ -68,9 +72,17 @@ RSpec.describe Sourcerer::Cli do
 
     context 'when no packages are found' do
       before do
-        allow(Sourcerer::Package).to receive(:search).and_return []
+        @package = Sourcerer::Package.allocate
+        @error = Sourcerer::Error.allocate
 
-        @cli.options = { version: '1.2.3', type: :any, destination: 'packages_dir' }
+        allow(@error).to receive(:message).and_return 'package error'
+        allow(@package).to receive(:errors).and_return [@error]
+        allow(Sourcerer::Package).to receive(:search).and_return({
+          success: [],
+          fail: [@package]
+        })
+
+        @cli.options = { version: '1.2.3', type: 'any', destination: 'packages_dir' }
         @cli.install 'package_foo'
       end
 
@@ -78,7 +90,7 @@ RSpec.describe Sourcerer::Cli do
         expect(A).to_not have_received(:sk)
 
         expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: :any).ordered
-        expect(S).to have_received(:ay).with('no_package_found package_foo', Hash).ordered
+        expect(S).to have_received(:ay).with('package error', Hash).exactly(1).times.ordered
       end
     end
   end

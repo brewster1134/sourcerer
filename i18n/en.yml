@@ -1,6 +1,9 @@
 en: &en
   sourcerer:
     errors:
+      cli:
+        install:
+          no_package_found: "No package for %{package_name} was found. Check that the package name, version and/or type are correct"
       sourcerer:
         install:
           multiple_packages_found: "Multiple packages for %{package_name} were found. Set `type` to one of the following types: %{package_types}"
@@ -10,16 +13,19 @@ en: &en
           download_method_not_defined: No download method defined for package type %{package_type}
         search:
           search_method_not_defined: No seach method defined for package type %{package_type}
-          any_type:
-            no_packages_found: "%{package_name} with version %{version} could not not be found. Verify the package name & version"
-          single_type:
-            no_package_found: "%{package_name} with version %{version} could not not be found using %{type}. Verify the package name & version, or try a different type"
+          # any_type:
+          #   no_packages_found: "%{package_name} with version %{version} could not not be found. Verify the package name & version"
+          # single_type:
+          #   no_package_found: "%{package_name} with version %{version} could not not be found using %{type}. Verify the package name & version, or try a different type"
+      packages:
+        no_package_found: "%{package_name} is not a %{package_type} package"
+
     cli:
       install:
         description: Install a package
         installing_package: Installing %{package_name} from %{type} to %{destination}
         multiple_packages_found: Multiple packages for %{package_name} were found. Choose the type to install from...
-        no_package_found: "No package for %{package_name} was found. Check that the package name, version and/or type are correct"
+
         success: Installation Complete
         options:
           destination:

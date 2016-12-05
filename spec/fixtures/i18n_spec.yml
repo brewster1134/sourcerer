@@ -1,6 +1,9 @@
 spec:
   sourcerer:
     errors:
+      cli:
+        install:
+          no_package_found: no_package_found %{package_name}
       sourcerer:
         install:
           multiple_packages_found: multiple_packages_found %{package_name} %{package_types}

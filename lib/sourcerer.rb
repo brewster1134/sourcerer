@@ -25,19 +25,26 @@ module Sourcerer
   #
   def self.install package_name, version: :latest, type: :any, destination: DEFAULT_DESTINATION_DIRECTORY
     # search for package
-    packages = Sourcerer::Package.search package_name: package_name, version: version, type: type
+    packages = Sourcerer::Package.search package_name: package_name, version: version, type: type.to_sym
 
     # if a single package is found, continue
-    if packages.length == 1
-      package = packages.first
+    if packages[:success].length == 1
+      package = packages[:success].first
 
     # if multiple packages are found, raise an error
-    elsif packages.length > 1
-      package_types = packages.collect { |package| package.type.to_s }.join(', ')
+    elsif packages[:success].length > 1
+      package_types = packages[:success].collect { |package| package.type.to_s }.join(', ')
       raise Sourcerer::Error.new 'sourcerer.install.multiple_packages_found', package_name: package_name, package_types: package_types
 
-    # if no packages are found, raise an error
-    elsif packages.length == 0
+    # if no packages are found, show errors and raise an exception
+    elsif packages[:success].length == 0
+      # show errors from each attempted package type search
+      packages[:fail].each do |package|
+        package.errors.each do |error|
+          S.ay error.message, preset: :sourcerer_error
+        end
+      end
+
       raise Sourcerer::Error.new 'sourcerer.install.no_package_found', package_name: package_name
     end
 

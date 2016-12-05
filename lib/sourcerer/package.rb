@@ -4,27 +4,55 @@ module Sourcerer
     #
     # PUBLIC CLASS METHODS
     #
-    def self.search package_name:, version:, type:
-      packages = []
 
-      # search all package types
-      if type == :any
-        subclasses.each do |subclass_type, subclass|
-          package = subclass.new package_name: package_name, version: version, type: subclass_type
-          packages << package if package.found?
+    # Search for a package with the version & type(s) specified
+    #
+    # @param [Hash] options
+    # @option options [String] :package_name A name of the package to search for
+    # @option options [String] :version A specific version to search for
+    # @option options [Symbol, Array<Symbol>] :type The type(s) of package to search for
+    # @return [Array<Sourcerer::Package>] An array of packages that match the specified name, version & type
+    #
+    def self.search package_name:, version:, type:
+      packages = {
+        success: [],
+        fail: []
+      }
+
+      # search multiple package types
+      if type.is_a? Array
+        type.each do |t|
+          subclass = subclasses[t.to_sym]
+
+          package = subclass.new package_name: package_name, version: version, type: t.to_sym
+          if package.source
+            packages[:success] << package
+          else
+            packages[:fail] << package
+          end
         end
 
-        raise Sourcerer::Error.new 'package.search.any_type.no_packages_found', package_name: package_name, version: version if packages.empty?
+      # search all package types
+      elsif type.to_sym == :any
+        subclasses.each do |subclass_type, subclass|
+          package = subclass.new package_name: package_name, version: version, type: subclass_type
+          if package.source
+            packages[:success] << package
+          else
+            packages[:fail] << package
+          end
+        end
 
       # search single package type
       else
         subclass = subclasses[type.to_sym]
         package = subclass.new package_name: package_name, version: version, type: type.to_sym
-        if package.found?
-          packages << package
+        if package.source
+          packages[:success] << package
         else
-          raise Sourcerer::Error.new 'package.search.single_type.no_package_found', package_name: package_name, version: version, type: type
+          packages[:fail] << package
         end
+
       end
 
       return packages
@@ -33,21 +61,27 @@ module Sourcerer
     #
     # PUBLIC INSTANCE METHODS
     #
-    attr_reader :type
+    attr_reader :errors, :name, :source, :type, :version
 
     # Copies a downloaded package to the destination
+    #
     def copy destination:
       # FileUtils.cp_r source, destination
     end
 
-    # `download` & `search` method needs defined in the package type class in their respective packages/[TYPE].rb file
+    # Register a package error
     #
-    def download
-      raise Sourcerer::Error.new 'package.download.download_method_not_defined', package_type: self.type
+    def add_error i18n_keys, args = {}
+      errors << Sourcerer::Error.new(i18n_keys, args)
     end
 
-    def search package_name:, version:
-      raise Sourcerer::Error.new 'package.search.search_method_not_defined', package_type: self.type
+    # Download the package
+    # @note The download method needs defined in the package type class in their respective packages/[TYPE].rb file
+    # @return [Sourcerer::Package]
+    # @raise [Sourcerer::Error] If the package can't be downloaded
+    #
+    def download # destination:
+      raise Sourcerer::Error.new 'package.download.download_method_not_defined', package_type: self.type
     end
 
     private
@@ -71,18 +105,36 @@ module Sourcerer
     #
     # PRIVATE INSTANCE METHODS
     #
-    attr_writer :found
 
+    # Create a new package instance and search for a matching version
+    # @param [Hash] options
+    # @option options [String] :package_name A name of the package to search for
+    # @option options [String] :version A specific version to search for
+    # @option options [Symbol] :type The package type being initialized
+    #
     def initialize package_name:, version:, type:
-      @package_name = package_name
+      @errors = []
+      @found = nil
+      @name = package_name
+      @type = type
       @version = Semantic::Version.new(version) rescue version
-      @type = type.to_sym
-      @package = search package_name: @package_name, version: @version
-      @found = !!@package
+      @source = search package_name: @name, version: @version
+
+      # If no source was found, add a generic error as the first error
+      @errors.unshift(Sourcerer::Error.new('packages.no_package_found', package_name: @name, package_type: @type)) unless @source
     end
 
-    def found?
-      @found
+    # Search for the package source asset with the given package name & version
+    # @note The search method needs defined in the package type class in their respective packages/[TYPE].rb file
+    # @todo TEST: return source string or nil
+    # @param [Hash] options
+    # @option options [String] :package_name
+    # @option options [String, Semantic::Version] :version
+    # @return [String] if a matching package source is found, return source path
+    # @return [nil] if no matching package source if found, return nil
+    #
+    def search package_name:, version:
+      raise Sourcerer::Error.new 'package.search.search_method_not_defined', package_type: self.type
     end
   end
 

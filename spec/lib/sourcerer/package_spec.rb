@@ -20,31 +20,31 @@ RSpec.describe Sourcerer::Package do
   describe '.search' do
     before do
       class SearchFoo
-        def initialize package_name:, version:, type:
-        end
-        def found?
-        end
+        def initialize package_name:, version:, type:; end
+        def source; :foo; end
       end
-
       class SearchBar
-        def initialize package_name:, version:, type:
-        end
-        def found?
-        end
+        def initialize package_name:, version:, type:; end
+        def source; :bar; end
+      end
+      class SearchBaz
+        def initialize package_name:, version:, type:; end
+        def source; :baz; end
       end
 
       Sourcerer::Package.class_variable_set :@@subclasses, {
         type_one: SearchFoo,
-        type_two: SearchBar
+        type_two: SearchBar,
+        type_three: SearchBaz,
       }
 
       @package_foo = SearchFoo.allocate
       @package_bar = SearchBar.allocate
+      @package_baz = SearchBar.allocate
 
       allow(SearchFoo).to receive(:new).and_return @package_foo
-      allow_any_instance_of(SearchFoo).to receive(:found?).and_return true
       allow(SearchBar).to receive(:new).and_return @package_bar
-      allow_any_instance_of(SearchBar).to receive(:found?).and_return true
+      allow(SearchBaz).to receive(:new).and_return @package_baz
     end
 
     context 'when searching any type' do
@@ -55,10 +55,33 @@ RSpec.describe Sourcerer::Package do
       it 'should search each package type' do
         expect(SearchFoo).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_one)
         expect(SearchBar).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_two)
+        expect(SearchBaz).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_three)
       end
 
       it 'should return an array with the packages' do
-        expect(@packages).to eq [@package_foo, @package_bar]
+        expect(@packages).to eq({
+          success: [@package_foo, @package_bar, @package_baz],
+          fail: []
+        })
+      end
+    end
+
+    context 'when searching multiple specific types' do
+      before do
+        @packages = Sourcerer::Package.search package_name: 'package_name', version: '1.2.3', type: ['type_one', 'type_three']
+      end
+
+      it 'should search only the specific package types' do
+        expect(SearchFoo).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_one)
+        expect(SearchBar).to_not have_received(:new)
+        expect(SearchBaz).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_three)
+      end
+
+      it 'should return an array with the packages' do
+        expect(@packages).to eq({
+          success: [@package_foo, @package_baz],
+          fail: []
+        })
       end
     end
 
@@ -70,10 +93,14 @@ RSpec.describe Sourcerer::Package do
       it 'should search only the specific package type' do
         expect(SearchFoo).to_not have_received(:new)
         expect(SearchBar).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_two)
+        expect(SearchBaz).to_not have_received(:new)
       end
 
       it 'should return an array with the package' do
-        expect(@packages).to eq [@package_bar]
+        expect(@packages).to eq({
+          success: [@package_bar],
+          fail: []
+        })
       end
     end
   end
@@ -81,6 +108,25 @@ RSpec.describe Sourcerer::Package do
   #
   # PUBLIC INSTANCE METHODS
   #
+  describe '#add_error' do
+    before do
+      @package = Sourcerer::Package.allocate
+      @package.instance_variable_set :@errors, []
+
+      allow(Sourcerer::Error).to receive(:new).and_return 'error_foo'
+
+      @package.add_error 'add_error', foo: 'FOO'
+    end
+
+    after do
+      allow(Sourcerer::Error).to receive(:new).and_call_original
+    end
+
+    it 'should add a Sourcerer::Error instance' do
+      expect(Sourcerer::Error).to have_received(:new).with 'add_error', foo: 'FOO'
+      expect(@package.errors).to include 'error_foo'
+    end
+  end
 
   #
   # PRIVATE CLASS METHODS
@@ -150,8 +196,7 @@ RSpec.describe Sourcerer::Package do
   describe '#initialize' do
     before do
       class InitializeFoo < Sourcerer::Package
-        def search package_name:, version:
-        end
+        def search package_name:, version:; end
       end
 
       allow_any_instance_of(InitializeFoo).to receive(:search)
