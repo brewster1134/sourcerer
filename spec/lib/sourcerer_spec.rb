@@ -14,7 +14,7 @@ RSpec.describe Sourcerer do
 
       it 'should install the package in the right order' do
         expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: :foo_type).ordered
-        expect(@package).to have_received(:install).ordered
+        expect(@package).to have_received(:install).with(destination: 'packages_dir').ordered
       end
     end
 

@@ -31,7 +31,7 @@ RSpec.describe Sourcerer::Cli do
         expect(@package).to_not have_received(:type)
 
         expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: :foo_type).ordered
-        expect(@package).to have_received(:install).ordered
+        expect(@package).to have_received(:install).with(destination: 'packages_dir').ordered
       end
     end
 
@@ -60,7 +60,7 @@ RSpec.describe Sourcerer::Cli do
         expect(@package_one).to have_received(:type).ordered
         expect(@package_two).to have_received(:type).ordered
         expect(A).to have_received(:sk).with(include('multiple_packages_found', 'package_foo'), type: :multiple_choice, choices: { 'foo_type' => @package_one, 'bar_type' => @package_two }, max: 1).ordered
-        expect(@package_two).to have_received(:install).ordered
+        expect(@package_two).to have_received(:install).with(destination: 'packages_dir').ordered
       end
     end
 

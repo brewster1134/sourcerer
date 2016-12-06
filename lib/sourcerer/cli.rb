@@ -36,7 +36,7 @@ module Sourcerer
 
       # install package
       S.ay I18n.t('sourcerer.cli.install.installing_package', package_name: package_name.green, type: options[:type].green, destination: options[:destination].green), preset: :sourcerer_success
-      package.install
+      package.install destination: options[:destination]
 
       S.ay I18n.t('sourcerer.cli.install.success'), preset: :sourcerer_success
     end

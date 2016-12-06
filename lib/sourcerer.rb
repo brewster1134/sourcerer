@@ -49,6 +49,6 @@ module Sourcerer
     end
 
     # install package
-    package.install
+    package.install destination: destination
   end
 end

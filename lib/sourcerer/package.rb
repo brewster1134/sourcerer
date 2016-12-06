@@ -6,7 +6,6 @@ module Sourcerer
     #
 
     # Search for a package with the version & type(s) specified
-    #
     # @param [Hash] options
     # @option options [String] :package_name A name of the package to search for
     # @option options [String] :version A specific version to search for
@@ -71,7 +70,22 @@ module Sourcerer
 
     # Orchestrate downloading, caching, and installing the package
     #
-    def install
+    def install destination:
+      # lookup or create a cache directory
+      cache_dir = Dir.new '/Library/Caches'
+      cache_key = "#{@type}_#{@name}_#{@version}_#{@source}".downcase.gsub(/[^A-Za-z0-9]/, '')
+      cache_package_dir = File.join(cache_directory, cache_key)
+
+      # if cache dir does not exist or is empty, create it and pass it to the package type download method
+      unless File.directory?(cache_package_dir) && Dir.entries(cache_package_dir).length > 2
+        Dir.mkdir cache_package_dir
+        self.download source: @source, destination: cache_package_dir
+      end
+
+      # cache directory should exist and contain the package
+      cache_package_dir
+
+      FileUtils.cp_r 'cache_package_dir/.', destination
     end
 
     private
@@ -119,8 +133,8 @@ module Sourcerer
     # @param [Hash] options
     # @option options [String] :package_name
     # @option options [String, Semantic::Version] :version
-    # @return [String] if a matching package source is found, return source path
-    # @return [nil] if no matching package source if found, return nil
+    # @return [String] If a matching package source is found, returns source path
+    # @return [false] If no matching package source if found, returns false
     #
     def search package_name:, version:
       raise Sourcerer::Error.new 'package.search.search_method_not_defined', package_type: self.type
@@ -128,14 +142,19 @@ module Sourcerer
 
     # Download the package
     # @note The download method needs defined in the package type class in their respective packages/[TYPE].rb file
-    # @return [Sourcerer::Package]
-    # @raise [Sourcerer::Error] If the package can't be downloaded
+    # @param [Hash] options
+    # @option options [String] :source The source string returned from the #search
+    # @option options [String, Semantic::Version] :destination The path to a cached directory to download to, or copy from
+    # @return [Pathname] If the download completes, returns the path to the the cached directory
+    # @raise [false] If the download fails, returns false
     #
     def download source:, destination:
       raise Sourcerer::Error.new 'package.download.download_method_not_defined', package_type: self.type
     end
   end
 
+  # Require all the package types
+  #
   module Packages
     Dir[File.join(__dir__, 'package_types', '*.rb')].each { |file| require file }
   end
