@@ -63,25 +63,15 @@ module Sourcerer
     #
     attr_reader :errors, :name, :source, :type, :version
 
-    # Copies a downloaded package to the destination
-    #
-    def copy destination:
-      # FileUtils.cp_r source, destination
-    end
-
     # Register a package error
     #
     def add_error i18n_keys, args = {}
       errors << Sourcerer::Error.new(i18n_keys, args)
     end
 
-    # Download the package
-    # @note The download method needs defined in the package type class in their respective packages/[TYPE].rb file
-    # @return [Sourcerer::Package]
-    # @raise [Sourcerer::Error] If the package can't be downloaded
+    # Orchestrate downloading, caching, and installing the package
     #
-    def download # destination:
-      raise Sourcerer::Error.new 'package.download.download_method_not_defined', package_type: self.type
+    def install
     end
 
     private
@@ -126,7 +116,6 @@ module Sourcerer
 
     # Search for the package source asset with the given package name & version
     # @note The search method needs defined in the package type class in their respective packages/[TYPE].rb file
-    # @todo TEST: return source string or nil
     # @param [Hash] options
     # @option options [String] :package_name
     # @option options [String, Semantic::Version] :version
@@ -135,6 +124,15 @@ module Sourcerer
     #
     def search package_name:, version:
       raise Sourcerer::Error.new 'package.search.search_method_not_defined', package_type: self.type
+    end
+
+    # Download the package
+    # @note The download method needs defined in the package type class in their respective packages/[TYPE].rb file
+    # @return [Sourcerer::Package]
+    # @raise [Sourcerer::Error] If the package can't be downloaded
+    #
+    def download source:, destination:
+      raise Sourcerer::Error.new 'package.download.download_method_not_defined', package_type: self.type
     end
   end
 

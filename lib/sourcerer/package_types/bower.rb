@@ -1,50 +1,38 @@
 module Sourcerer
   module Packages
     class Bower < Sourcerer::Package
+      # @see Sourcerer::Package#search
+      #
       def search package_name:, version:
-        url = url package_name
+        # look for package url, and return false if not found
+        url = get_url package_name
+        return false if url.nil?
 
-        # if no package url was found, return nil
-        return nil if url.nil?
+        # search for package with the url, and return false unless a single package isn't found
+        url_packages = Sourcerer::Package.search package_name: package_name, version: version, type: [:git, :url]
+        return false unless url_packages.length == 1
 
-        # if package url was found, search for a package with a matching version
-        packages = Sourcerer::Package.search package_name: package_name, version: version, type: [:git, :url]
-
-        # if package was found...
-        if packages.length == 1
-          return packages.first
-
-        # if multiple packages were found (this should never happen)...
-        elsif packages.length > 1
-          return nil
-
-        # if package was not found...
-        elsif packages.length == 0
-          return nil
-        end
+        # package found. set the new package and return true
+        @url_package = url_packages.first
+        return true
       end
 
+      # @see Sourcerer::Package#download
+      #
       def download
+        @url_package.download
       end
 
       private
 
       # Get Bower package url
       #
-      def url package_name
-        begin
-          package_response = RestClient.get "http://bower.herokuapp.com/packages/#{package_name}"
-          return package_response['url']
-        rescue
-          add_error 'packages.no_package_found', package_name: package_name, package_type: type
-          return nil
-        end
+      def get_url package_name
+        package_response = RestClient.get "http://bower.herokuapp.com/packages/#{package_name}"
+        package_response['url']
+      rescue
+        nil
       end
-
-      # def installed?
-      #   system 'bower'
-      #   $?.exitstatus == 0
-      # end
     end
   end
 end

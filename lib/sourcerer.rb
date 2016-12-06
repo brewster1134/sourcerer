@@ -48,8 +48,7 @@ module Sourcerer
       raise Sourcerer::Error.new 'sourcerer.install.no_package_found', package_name: package_name
     end
 
-    # download & install package
-    package.download
-    package.copy destination: destination
+    # install package
+    package.install
   end
 end

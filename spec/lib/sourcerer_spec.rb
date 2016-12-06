@@ -4,8 +4,7 @@ RSpec.describe Sourcerer do
       before do
         @package = Sourcerer::Package.allocate
 
-        allow(@package).to receive(:copy)
-        allow(@package).to receive(:download)
+        allow(@package).to receive(:install)
         allow(Sourcerer::Package).to receive(:search).and_return({
           success: [@package]
         })
@@ -15,8 +14,7 @@ RSpec.describe Sourcerer do
 
       it 'should install the package in the right order' do
         expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: :foo_type).ordered
-        expect(@package).to have_received(:download).ordered
-        expect(@package).to have_received(:copy).with(destination: 'packages_dir').ordered
+        expect(@package).to have_received(:install).ordered
       end
     end
 
@@ -46,6 +44,7 @@ RSpec.describe Sourcerer do
 
         allow(@error).to receive(:message).and_return 'package error'
         allow(@package).to receive(:errors).and_return [@error]
+        allow(@package).to receive(:install)
         allow(S).to receive(:ay)
         allow(Sourcerer::Package).to receive(:search).and_return({
           success: [],
@@ -61,6 +60,7 @@ RSpec.describe Sourcerer do
 
       it 'should raise an error' do
         expect{ @sourcerer_install[] }.to raise_error { |error|
+          expect(@package).to_not have_received(:install)
           expect(S).to have_received(:ay).with 'package error', Hash
           expect(error).to be_a Sourcerer::Error
           expect(error.message).to eq 'no_package_found package_foo'

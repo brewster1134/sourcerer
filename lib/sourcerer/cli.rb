@@ -34,10 +34,9 @@ module Sourcerer
         return
       end
 
-      # download & install package
+      # install package
       S.ay I18n.t('sourcerer.cli.install.installing_package', package_name: package_name.green, type: options[:type].green, destination: options[:destination].green), preset: :sourcerer_success
-      package.download
-      package.copy destination: options[:destination]
+      package.install
 
       S.ay I18n.t('sourcerer.cli.install.success'), preset: :sourcerer_success
     end
