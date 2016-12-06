@@ -128,6 +128,59 @@ RSpec.describe Sourcerer::Package do
     end
   end
 
+  describe '#install' do
+    before do
+      @package = Sourcerer::Package.allocate
+      @cache_dir = File.expand_path(File.join(__dir__, '..', '..', 'fixtures', 'cache'))
+      @packages_dir = File.expand_path(File.join(__dir__, '..', '..', 'fixtures', 'packages'))
+
+      # start with a clean directory
+      FileUtils.rm_rf @packages_dir
+
+      allow(@package).to receive(:download)
+      allow(@package).to receive(:name).and_return 'package_name'
+      allow(@package).to receive(:version).and_return '1.2.3'
+      allow(FileUtils).to receive(:mkdir_p).and_call_original
+      allow(FileUtils).to receive(:cp_r).and_call_original
+
+      stub_const "Sourcerer::DEFAULT_CACHE_DIRECTORY", @cache_dir
+    end
+
+    context 'when package is cached' do
+      before do
+        allow(@package).to receive(:source).and_return 'cached_package'
+
+        @package.install destination: @packages_dir
+      end
+
+      it 'should install in the right order' do
+        expect(FileUtils).to have_received(:mkdir_p).with(@cache_dir).ordered
+        expect(@package).to_not have_received(:download)
+        expect(FileUtils).to have_received(:cp_r).with(File.join(@cache_dir, 'cached_package_123', '.'), File.join(@packages_dir, 'package_name')).ordered
+      end
+
+      it 'should install to the right directory' do
+        expect(File.directory? File.join(@packages_dir, 'package_name')).to be true
+        expect(File.exists? File.join(@packages_dir, 'package_name', 'cached_package.txt')).to be true
+        expect(File.read(File.join(@packages_dir, 'package_name', 'cached_package.txt'))).to include 'Cached Package'
+      end
+    end
+
+    context 'when package is not cached' do
+      before do
+        allow(@package).to receive(:source).and_return 'uncached_package'
+
+        @package.install destination: @packages_dir
+      end
+
+      it 'should install in the right order' do
+        expect(FileUtils).to have_received(:mkdir_p).with(@cache_dir).ordered
+        expect(@package).to have_received(:download).with({ source: 'uncached_package', destination: File.join(@cache_dir, 'uncached_package_123') }).ordered
+        expect(FileUtils).to have_received(:cp_r).with(File.join(@cache_dir, 'uncached_package_123', '.'), File.join(@packages_dir, 'package_name')).ordered
+      end
+    end
+  end
+
   #
   # PRIVATE CLASS METHODS
   #

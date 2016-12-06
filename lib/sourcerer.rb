@@ -18,6 +18,7 @@ module Sourcerer
   require 'sourcerer/package'
 
   # Default Configuration
+  DEFAULT_CACHE_DIRECTORY = '/Library/Caches/sourcerer'
   DEFAULT_PACKAGES_DIRECTORY = 'sourcerer_packages'
   DEFAULT_DESTINATION_DIRECTORY = File.join(Dir.pwd, DEFAULT_PACKAGES_DIRECTORY)
 

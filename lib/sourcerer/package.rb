@@ -71,21 +71,26 @@ module Sourcerer
     # Orchestrate downloading, caching, and installing the package
     #
     def install destination:
-      # lookup or create a cache directory
-      cache_dir = Dir.new '/Library/Caches'
-      cache_key = "#{@type}_#{@name}_#{@version}_#{@source}".downcase.gsub(/[^A-Za-z0-9]/, '')
-      cache_package_dir = File.join(cache_directory, cache_key)
+      # create the root cache directory
+      cache_dir = Sourcerer::DEFAULT_CACHE_DIRECTORY
+      FileUtils.mkdir_p cache_dir
+
+      # define the package cache directory
+      cache_key = "#{source}_#{version.to_s}".downcase.gsub(/[^A-Za-z0-9_]/, '')
+      cache_package_dir = File.join(cache_dir, cache_key)
+
+      # define the package destination directory
+      package_destination_dir = "#{destination}/#{name}"
 
       # if cache dir does not exist or is empty, create it and pass it to the package type download method
       unless File.directory?(cache_package_dir) && Dir.entries(cache_package_dir).length > 2
-        Dir.mkdir cache_package_dir
-        self.download source: @source, destination: cache_package_dir
+        FileUtils.mkdir_p cache_package_dir
+        download source: source, destination: cache_package_dir
       end
 
       # cache directory should exist and contain the package
-      cache_package_dir
-
-      FileUtils.cp_r 'cache_package_dir/.', destination
+      FileUtils.mkdir_p package_destination_dir
+      FileUtils.cp_r "#{cache_package_dir}/.", package_destination_dir
     end
 
     private
