@@ -12,15 +12,15 @@ module Sourcerer
         url_packages = Sourcerer::Package.search package_name: package_name, version: version, type: [:git, :url]
         return false unless url_packages.length == 1
 
-        # package found. set the new package and return true
+        # package found. set the new package and return source
         @url_package = url_packages.first
-        return true
+        return @url_package.source
       end
 
       # @see Sourcerer::Package#download
       #
-      def download
-        @url_package.download
+      def download source:, destination:
+        @url_package.download source: source, destination: destination
       end
 
       private

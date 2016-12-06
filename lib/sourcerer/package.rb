@@ -66,7 +66,7 @@ module Sourcerer
     # Register a package error
     #
     def add_error i18n_keys, args = {}
-      errors << Sourcerer::Error.new(i18n_keys, args)
+      errors << Sourcerer::Error.new("packages.#{i18n_keys}", args)
     end
 
     # Orchestrate downloading, caching, and installing the package

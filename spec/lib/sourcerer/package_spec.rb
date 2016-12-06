@@ -123,7 +123,7 @@ RSpec.describe Sourcerer::Package do
     end
 
     it 'should add a Sourcerer::Error instance' do
-      expect(Sourcerer::Error).to have_received(:new).with 'add_error', foo: 'FOO'
+      expect(Sourcerer::Error).to have_received(:new).with 'packages.add_error', foo: 'FOO'
       expect(@package.errors).to include 'error_foo'
     end
   end
