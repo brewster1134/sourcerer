@@ -1,5 +1,6 @@
 module Sourcerer
   class Package
+    include Sourcerer::Version
     @@subclasses = {}
     #
     # PUBLIC CLASS METHODS
@@ -133,6 +134,18 @@ module Sourcerer
       @errors.unshift(Sourcerer::Error.new('packages.no_package_found', package_name: @name, package_type: @type)) unless @source
     end
 
+    # Download the package
+    # @note The download method needs defined in the package type class in their respective packages/[TYPE].rb file
+    # @param [Hash] options
+    # @option options [String] :source The source string returned from the #search
+    # @option options [String, Semantic::Version] :destination The path to a cached directory to download to, or copy from
+    # @return [Pathname] If the download completes, returns the path to the the cached directory
+    # @raise [false] If the download fails, returns false
+    #
+    def download source:, destination:
+      raise Sourcerer::Error.new 'package.download.download_method_not_defined', package_type: self.type
+    end
+
     # Search for the package source asset with the given package name & version
     # @note The search method needs defined in the package type class in their respective packages/[TYPE].rb file
     # @param [Hash] options
@@ -145,16 +158,14 @@ module Sourcerer
       raise Sourcerer::Error.new 'package.search.search_method_not_defined', package_type: self.type
     end
 
-    # Download the package
-    # @note The download method needs defined in the package type class in their respective packages/[TYPE].rb file
+    # Return a list of all available versions/tags for a given package
+    # @note The versions method needs defined in the package type class in their respective packages/[TYPE].rb file
     # @param [Hash] options
-    # @option options [String] :source The source string returned from the #search
-    # @option options [String, Semantic::Version] :destination The path to a cached directory to download to, or copy from
-    # @return [Pathname] If the download completes, returns the path to the the cached directory
-    # @raise [false] If the download fails, returns false
+    # @option options [String] :package_name
+    # @return [Array] An array of all available package versions or tags to filter
     #
-    def download source:, destination:
-      raise Sourcerer::Error.new 'package.download.download_method_not_defined', package_type: self.type
+    def versions package_name:
+      raise Sourcerer::Error.new 'package.versions.versions_method_not_defined', package_type: self.type
     end
   end
 

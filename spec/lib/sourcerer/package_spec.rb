@@ -9,6 +9,10 @@ RSpec.describe Sourcerer::Packages do
       it 'should define a search method' do
         expect(package_class.instance_methods(false)).to include :search
       end
+
+      it 'should define a version method' do
+        expect(package_class.instance_methods(false)).to include :versions
+      end
     end
   end
 end

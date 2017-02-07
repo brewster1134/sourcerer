@@ -57,7 +57,4 @@ RSpec.describe Sourcerer::Packages::Bower do
       end
     end
   end
-
-  describe '#download' do
-  end
 end

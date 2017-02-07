@@ -1,5 +1,6 @@
 require 'sourcerer'
 require 'sourcerer/cli'
+require 'yaml'
 
 I18n.load_path << File.join('spec', 'fixtures', 'i18n_spec.yml')
 I18n.reload!

@@ -10,6 +10,11 @@ module Sourcerer
       #
       def download
       end
+
+      # @see Sourcerer::Package#versions
+      #
+      def versions package_name:
+      end
     end
   end
 end

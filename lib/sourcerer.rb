@@ -15,12 +15,18 @@ I18n.locale = ENV['LANG'].split('.').first.downcase
 module Sourcerer
   require 'sourcerer/error'
   require 'sourcerer/meta'
+  require 'sourcerer/version'
   require 'sourcerer/package'
 
   # Default Configuration
   DEFAULT_CACHE_DIRECTORY = '/Library/Caches/sourcerer'
   DEFAULT_PACKAGES_DIRECTORY = 'sourcerer_packages'
   DEFAULT_DESTINATION_DIRECTORY = File.join(Dir.pwd, DEFAULT_PACKAGES_DIRECTORY)
+  # matches semantic versions using a wildcard or pessimistic operator
+  SEMANTIC_VERSION_WILDCARD_REGEX = /^[><=~\s]{0,3}[0-9\.]{1,5}[a-z0-9+-\.]*$/
+  # captures the integer artifacts from a semantic version wildcard
+  SEMANTIC_VERSION_ARTIFACT_REGEX = /^([><=~]+)?\s?([0-9x]+)\.?([0-9x]+)?\.?([0-9x]+)?\-?([a-z]+)?\.?([0-9x]+)?\.?([0-9x]+)?\.?([0-9x]+)?\.?\-?(.+)?$/
+  SEMANTIC_VERSION_OPERATORS = ['==', '<', '<=', '>', '>=', '~', '~>']
 
   # Entrypoint for Sourcerer via Ruby
   #

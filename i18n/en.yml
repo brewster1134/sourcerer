@@ -12,7 +12,9 @@ en: &en
         download:
           download_method_not_defined: No download method defined for package type %{package_type}
         search:
-          search_method_not_defined: No seach method defined for package type %{package_type}
+          search_method_not_defined: No search method defined for package type %{package_type}
+        versions:
+          versions_method_not_defined: No versions method defined for package type %{package_type}
           # any_type:
           #   no_packages_found: "%{package_name} with version %{version} could not not be found. Verify the package name & version"
           # single_type:

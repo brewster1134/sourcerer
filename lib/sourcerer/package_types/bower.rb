@@ -23,13 +23,18 @@ module Sourcerer
         @url_package.download source: source, destination: destination
       end
 
+      # @see Sourcerer::Package#versions
+      #
+      def versions package_name:
+      end
+
       private
 
       # Get Bower package url
       #
       def get_url package_name
-        package_response = RestClient.get "http://bower.herokuapp.com/packages/#{package_name}"
-        package_response['url']
+        response = RestClient.get "http://bower.herokuapp.com/packages/#{package_name}"
+        JSON.load(response)['url']
       rescue
         nil
       end
