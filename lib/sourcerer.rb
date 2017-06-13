@@ -5,6 +5,8 @@
 #
 require 'active_support/core_ext/hash/keys'
 require 'i18n'
+require 'json'
+require 'rest-client'
 require 'semantic'
 
 # I18N
@@ -22,11 +24,12 @@ module Sourcerer
   DEFAULT_CACHE_DIRECTORY = '/Library/Caches/sourcerer'
   DEFAULT_PACKAGES_DIRECTORY = 'sourcerer_packages'
   DEFAULT_DESTINATION_DIRECTORY = File.join(Dir.pwd, DEFAULT_PACKAGES_DIRECTORY)
+
+  SEMANTIC_VERSION_OPERATORS = ['<', '<=', '>', '>=', '~', '~>']
   # matches semantic versions using a wildcard or pessimistic operator
   SEMANTIC_VERSION_WILDCARD_REGEX = /^[><=~\s]{0,3}[0-9\.]{1,5}[a-z0-9+-\.]*$/
   # captures the integer artifacts from a semantic version wildcard
   SEMANTIC_VERSION_ARTIFACT_REGEX = /^([><=~]+)?\s?([0-9x]+)\.?([0-9x]+)?\.?([0-9x]+)?\-?([a-z]+)?\.?([0-9x]+)?\.?([0-9x]+)?\.?([0-9x]+)?\.?\-?(.+)?$/
-  SEMANTIC_VERSION_OPERATORS = ['==', '<', '<=', '>', '>=', '~', '~>']
 
   # Entrypoint for Sourcerer via Ruby
   #
@@ -48,7 +51,7 @@ module Sourcerer
       # show errors from each attempted package type search
       packages[:fail].each do |package|
         package.errors.each do |error|
-          S.ay error.message, preset: :sourcerer_error
+          CliMiami::S.ay error.message, preset: :sourcerer_error
         end
       end
 

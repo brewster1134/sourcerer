@@ -7,13 +7,12 @@ module Sourcerer
     #
 
     # Search for a package with the version & type(s) specified
-    # @param [Hash] options
-    # @option options [String] :package_name A name of the package to search for
-    # @option options [String] :version A specific version to search for
-    # @option options [Symbol, Array<Symbol>] :type The type(s) of package to search for
-    # @return [Array<Sourcerer::Package>] An array of packages that match the specified name, version & type
+    # @param [String] package_name A name of the package to search for
+    # @param [String] version A specific version to search for
+    # @param [Symbol, Array<Symbol>] type The type(s) of package to search for
+    # @return [Hash] Object of success and failed packages
     #
-    def self.search package_name:, version:, type:
+    def self.search package_name:, version:, type: :any
       packages = {
         success: [],
         fail: []
@@ -124,7 +123,6 @@ module Sourcerer
     #
     def initialize package_name:, version:, type:
       @errors = []
-      @found = nil
       @name = package_name
       @type = type
       @version = Semantic::Version.new(version) rescue version

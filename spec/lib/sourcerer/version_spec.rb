@@ -1,5 +1,5 @@
 semantic_versions = YAML.load(File.read(File.join(__dir__, '..', '..', 'fixtures', 'semantic_versions.yaml'))).deep_symbolize_keys
-operators = semantic_versions[:operators] + semantic_versions[:operators].map{ |o| "#{o} " unless o.empty? }.compact
+operators = Sourcerer::SEMANTIC_VERSION_OPERATORS + Sourcerer::SEMANTIC_VERSION_OPERATORS.map{ |o| "#{o} " unless o.empty? }.compact
 
 RSpec.describe Sourcerer::Version do
   before do
@@ -45,7 +45,7 @@ RSpec.describe Sourcerer::Version do
         version = @version.find_matching_version version: v, versions_array: [v]
 
         expect(@version).to_not have_received(:find_matching_semantic_version)
-        expect(version).to eq v
+        expect(version).to eq v.to_s
       end
     end
 
@@ -106,9 +106,10 @@ RSpec.describe Sourcerer::Version do
     end
 
     context 'when increment is true' do
-      semantic_versions[:versions].each do |sv|
-        operators.each do |o|
-          it "should accept #{o}#{sv[:version]} and return #{sv[:full_incremented]}" do
+      it 'should increment version' do
+        # it "should accept #{o}#{sv[:version]} and return #{sv[:full_incremented]}" do
+        semantic_versions[:versions].each do |sv|
+          operators.each do |o|
             criteria = "#{o}#{sv[:version]}"
             complete_version_array = sv[:full_incremented].match(Sourcerer::SEMANTIC_VERSION_ARTIFACT_REGEX).to_a
             complete_version_array[0] = criteria
@@ -122,9 +123,10 @@ RSpec.describe Sourcerer::Version do
     end
 
     context 'when increment is false' do
-      semantic_versions[:versions].each do |sv|
-        operators.each do |o|
-          it "should accept #{o}#{sv[:version]} and return #{sv[:full]}" do
+      it 'not increment version' do
+        semantic_versions[:versions].each do |sv|
+          operators.each do |o|
+            # it "should accept #{o}#{sv[:version]} and return #{sv[:full]}" do
             criteria = "#{o}#{sv[:version]}"
             complete_version_array = sv[:full].match(Sourcerer::SEMANTIC_VERSION_ARTIFACT_REGEX).to_a
             complete_version_array[0] = criteria
@@ -134,6 +136,15 @@ RSpec.describe Sourcerer::Version do
             expect(@version).to have_received(:assemble_semantic_version).with({ criteria_array: complete_version_array })
           end
         end
+      end
+    end
+  end
+
+  describe '#assemble_semantic_version' do
+    it 'should return a proper version string from criteria array' do
+      semantic_versions[:versions].each do |sv|
+        criteria_array = sv[:version].match(Sourcerer::SEMANTIC_VERSION_ARTIFACT_REGEX).to_a
+        expect(@version.send(:assemble_semantic_version, criteria_array: criteria_array)).to eq sv[:full]
       end
     end
   end

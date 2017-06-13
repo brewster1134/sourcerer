@@ -10,10 +10,10 @@ module Sourcerer
 
         # search for package with the url, and return false unless a single package isn't found
         url_packages = Sourcerer::Package.search package_name: package_name, version: version, type: [:git, :url]
-        return false unless url_packages.length == 1
+        return false unless url_packages[:success].length == 1
 
         # package found. set the new package and return source
-        @url_package = url_packages.first
+        @url_package = url_packages[:success].first
         return @url_package.source
       end
 
@@ -26,6 +26,7 @@ module Sourcerer
       # @see Sourcerer::Package#versions
       #
       def versions package_name:
+        @url_package.versions package_name: package_name
       end
 
       private

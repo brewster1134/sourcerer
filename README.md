@@ -1,3 +1,10 @@
+[![gem version](https://badge.fury.io/rb/sourcerer.svg)](https://badge.fury.io/rb/sourcerer)
+[![dependencies](https://gemnasium.com/brewster1134/sourcerer.svg)](https://gemnasium.com/brewster1134/sourcerer)
+[![docs](http://inch-ci.org/github/brewster1134/sourcerer.svg?branch=master)](http://inch-ci.org/github/brewster1134/sourcerer)
+[![build](https://travis-ci.org/brewster1134/sourcerer.svg?branch=master)](https://travis-ci.org/brewster1134/sourcerer)
+[![coverage](https://coveralls.io/repos/brewster1134/sourcerer/badge.svg?branch=master)](https://coveralls.io/r/brewster1134/sourcerer?branch=master)
+[![code climate](https://codeclimate.com/github/brewster1134/sourcerer/badges/gpa.svg)](https://codeclimate.com/github/brewster1134/sourcerer)
+
 # Sourcerer
 A package manager
 ---

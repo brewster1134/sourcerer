@@ -12,7 +12,7 @@ RSpec.describe Sourcerer::Packages::Bower do
       before do
         allow(@bower).to receive(:get_url).and_return 'bower_package_url'
         allow(@package).to receive(:source).and_return 'bower_package_git_url'
-        allow(Sourcerer::Package).to receive(:search).and_return [@package]
+        allow(Sourcerer::Package).to receive(:search).and_return({ success: [@package] })
 
         @bower_search = @bower.search package_name: 'bower_package', version: '1.2.3'
       end
@@ -45,7 +45,7 @@ RSpec.describe Sourcerer::Packages::Bower do
     context 'when package url is not found' do
       before do
         allow(@bower).to receive(:get_url).and_return 'bower_package_url'
-        allow(Sourcerer::Package).to receive(:search).and_return []
+        allow(Sourcerer::Package).to receive(:search).and_return({ success: [] })
 
         @bower_search = @bower.search package_name: 'bower_package', version: '1.2.3'
       end

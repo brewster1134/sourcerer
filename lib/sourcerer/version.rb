@@ -1,11 +1,17 @@
 module Sourcerer
   module Version
+    # Searchs for a matching version based on user criteria and available versions
+    #
+    # @param version [String, Semantic::Version] A user provided tag or semantic version partial to search for
+    # @param versions_array [Array] An array of all the available tags or versions
+    # @return [String]
+    #
     def find_matching_version version:, versions_array:
-      # if version isn't a semantic version, but has a semantic version wildcard/pessimistic operator
+      # if version isn't a semantic version, but has a semantic version wildcard/operator
       if !version.is_a?(Semantic::Version) && version.match(Sourcerer::SEMANTIC_VERSION_WILDCARD_REGEX)
         find_matching_semantic_version criteria: version, versions_array: versions_array
       elsif versions_array.include? version
-        version
+        version.to_s
       else
         nil
       end
@@ -150,6 +156,10 @@ module Sourcerer
       assemble_semantic_version criteria_array: criteria_array_copy
     end
 
+    # create a valid semantic version string from a sourcerer criteria array
+    # @param [Array]  A sourcerer criteria array
+    # @return [String]  A valud semantic version string
+    #
     def assemble_semantic_version criteria_array:
       criteria_string = ''
       criteria_string << criteria_array[2]
@@ -160,17 +170,14 @@ module Sourcerer
       if criteria_array[5]
         criteria_string << '-'
         criteria_string << criteria_array[5]
-        if criteria_array[6]
-          criteria_string << '.'
-          criteria_string << criteria_array[6]
-          criteria_string << '.'
-          criteria_string << (criteria_array[7] || '0')
-          criteria_string << '.'
-          criteria_string << (criteria_array[8] || '0')
-          if criteria_array[9]
-            criteria_string << '-'
-            criteria_string << criteria_array[9]
-          end
+        criteria_string << '.'
+        criteria_string << (criteria_array[6] || '0')
+        criteria_string << '.'
+        criteria_string << (criteria_array[7] || '0')
+        criteria_string << '.'
+        criteria_string << (criteria_array[8] || '0')
+        if criteria_array[9]
+          criteria_string << criteria_array[9]
         end
       end
 

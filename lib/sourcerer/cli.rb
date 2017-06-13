@@ -1,6 +1,9 @@
 require 'cli_miami'
 require 'thor'
 
+CliMiami.set_preset :sourcerer_error,
+  color: :red
+
 module Sourcerer
   class Cli < Thor
     default_task :install
@@ -20,7 +23,7 @@ module Sourcerer
       # if multiple packages are found, prompt user to choose a package type
       elsif packages[:success].length > 1
         packages_hash = Hash[packages[:success].collect{ |package| [package.type.to_s, package] }]
-        selected_package = A.sk I18n.t('sourcerer.cli.install.multiple_packages_found', package_name: package_name.green), type: :multiple_choice, choices: packages_hash, max: 1
+        selected_package = CliMiami::A.sk I18n.t('sourcerer.cli.install.multiple_packages_found', package_name: package_name.green), type: :multiple_choice, choices: packages_hash, max: 1
         package = selected_package.values.first
 
       # if no packages are found, show errors and exit
@@ -28,17 +31,17 @@ module Sourcerer
         # show errors from each attempted package type search
         packages[:fail].each do |package|
           package.errors.each do |error|
-            S.ay error.message, preset: :sourcerer_error
+            CliMiami::S.ay error.message, preset: :sourcerer_error
           end
         end
         return
       end
 
       # install package
-      S.ay I18n.t('sourcerer.cli.install.installing_package', package_name: package_name.green, type: options[:type].green, destination: options[:destination].green), preset: :sourcerer_success
+      CliMiami::S.ay I18n.t('sourcerer.cli.install.installing_package', package_name: package_name.green, type: options[:type].green, destination: options[:destination].green), preset: :sourcerer_success
       package.install destination: options[:destination]
 
-      S.ay I18n.t('sourcerer.cli.install.success'), preset: :sourcerer_success
+      CliMiami::S.ay I18n.t('sourcerer.cli.install.success'), preset: :sourcerer_success
     end
 
     desc 'help [COMMAND]', I18n.t('sourcerer.cli.help.description')

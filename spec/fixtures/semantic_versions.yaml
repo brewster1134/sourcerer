@@ -1,12 +1,3 @@
-placeholder: x
-operators:
-  - ''    # i.e. ==
-  - '~'
-  - '~>'
-  - '<'
-  - '<='
-  - '>'
-  - '>='
 versions:
   -
     version: '1'
