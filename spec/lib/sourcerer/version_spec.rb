@@ -1,171 +1,139 @@
+semantic_versions = YAML.load(File.read(File.join(__dir__, '..', '..', 'fixtures', 'semantic_versions.yaml'))).deep_symbolize_keys
+operators = semantic_versions[:operators] + semantic_versions[:operators].map{ |o| "#{o} " unless o.empty? }.compact
+
 RSpec.describe Sourcerer::Version do
   before do
-    @semantic_versions = YAML.load(File.join(__dir__, '..', '..', 'fixtures', 'semantic_versions_list.txt'))
-
     class FooVersion
       include Sourcerer::Version
     end
+
+    @version = FooVersion.allocate
   end
 
   describe '#find_matching_version' do
     before do
-      @version = FooVersion.allocate
-
-      allow(@version).to receive(:find_matching_semantic_version).and_return '1.2.3'
+      allow(@version).to receive(:find_matching_semantic_version).and_return :semantic_version
     end
 
-    # wildcard semantic versions
-    [
-      '<= 1.2.3',
-      '<=1.2.3-beta.45',
-      '<=1.2.3-beta.4.5-rev.6.7.8',
-      '> 1.2.3',
-      '>=1.2.3',
-      '~> 1.2.3',
-      '~> 1.2',
-      '~> 1',
-      '~>1.2.3',
-      '~>1.2',
-      '~>1',
-      '~1.2.3',
-      '~1.2',
-      '~1',
-      '1.2.x',
-      '1.2',
-      '1.x',
-      '1'
-    ].each do |sv|
-      it "should detect semantic version wildcard: #{sv}" do
-        version = @version.find_matching_version version: sv, versions_array: [sv]
-        expect(@version).to have_received(:find_matching_semantic_version).with({ criteria: sv, versions_array: [sv] })
-        expect(version).to eq '1.2.3'
+    after do
+      allow(@version).to receive(:find_matching_semantic_version).and_call_original
+    end
+
+    it "should detect semantic versions (x#{semantic_versions[:versions].length}) w/ operators (x#{operators.length})" do
+      semantic_versions[:versions].each do |sv|
+        operators.each do |o|
+          version = "#{o}#{sv[:version]}"
+          semantic_version = @version.find_matching_version version: version, versions_array: []
+
+          expect(@version).to have_received(:find_matching_semantic_version).with({ criteria: version, versions_array: [] })
+          expect(semantic_version).to eq :semantic_version
+        end
       end
+
+      expect(@version).to have_received(:find_matching_semantic_version).exactly(semantic_versions[:versions].length * operators.length)
     end
 
-    # semantic versions
-    [
-      Semantic::Version.new('1.2.3-beta.45'),
-      Semantic::Version.new('1.2.3'),
-    ].each do |sv|
-      it "should detect exact semantic version: #{sv}" do
-        version = @version.find_matching_version version: sv, versions_array: [sv]
-        expect(@version).to_not have_received(:find_matching_semantic_version)
-        expect(version).to eq sv
-      end
-    end
+    it 'should detect exact versions/tags' do
+      [
+        Semantic::Version.new('1.2.3'),
+        :latest,
+        'branch',
+        'f7ae716',
+        'f7ae7164f8d725ccbe0fa2b5c4c2699824c787e5',
+        'tag'
+      ].each do |v|
+        version = @version.find_matching_version version: v, versions_array: [v]
 
-    # non-semantic versions
-    [
-      :latest,
-      'branch',
-      'f7ae716',
-      'f7ae7164f8d725ccbe0fa2b5c4c2699824c787e5',
-      'tag'
-    ].each do |sv|
-      it "should detect non-semantic versions: #{sv}" do
-        version = @version.find_matching_version version: sv, versions_array: [sv]
         expect(@version).to_not have_received(:find_matching_semantic_version)
-        expect(version).to eq sv
+        expect(version).to eq v
       end
     end
 
     it 'should return nil if no version found' do
       version = @version.find_matching_version version: 'foo', versions_array: ['bar']
+
+      expect(@version).to_not have_received(:find_matching_semantic_version)
       expect(version).to be_nil
     end
   end
 
   describe '#find_matching_semantic_version' do
     before do
-      @version = FooVersion.allocate
+      allow(@version).to receive(:get_valid_semantic_version)
 
       @filter_versions_calls = []
       allow(@version).to receive(:filter_versions) do |args|
-        @filter_versions_calls << args
-      end.and_return [1, 2]
+        @filter_versions_calls << args[:operator]
+      end.and_return [Semantic::Version.new('1.2.3'), Semantic::Version.new('3.2.1')]
     end
 
-    [
-      # no operator
-      [ '1',                            '==', '1.0.0' ],
-      [ '1.2',                          '==', '1.2.0' ],
-      [ '1.2.3',                        '==', '1.2.3' ],
-      [ '1.2.3-alpha',                  '==', '1.2.3-alpha' ],
-      [ '1.2.3-alpha.4',                '==', '1.2.3-alpha.4.0.0' ],
-      [ '1.2.3-alpha.4.5',              '==', '1.2.3-alpha.4.5.0' ],
-      [ '1.2.3-alpha.4.5.6',            '==', '1.2.3-alpha.4.5.6' ],
-      [ '1.2.3-alpha.4.5.6-rev',        '==', '1.2.3-alpha.4.5.6-rev' ],
+    after do
+      allow(@version).to receive(:get_valid_semantic_version).and_call_original
+      allow(@version).to receive(:filter_versions).and_call_original
+    end
 
-      # pessimistic operator
-      [ '~1',                     '>=', '1.0.0',                  '<',  '2.0.0' ],
-      [ '~1.2',                   '>=', '1.2.0',                  '<',  '2.0.0' ],
-      [ '~1.2.3',                 '>=', '1.2.3',                  '<',  '1.3.0' ],
-      [ '~1.2.3-alpha',           '>=', '1.2.3-alpha.0.0.0',      '<',  '1.2.3' ],
-      [ '~1.2.3-alpha.4',         '>=', '1.2.3-alpha.4.0.0',      '<',  '1.2.3-alpha.5.0.0' ],
-      [ '~1.2.3-alpha.4.5',       '>=', '1.2.3-alpha.4.5.0',      '<',  '1.2.3-alpha.5.0.0' ],
-      [ '~1.2.3-alpha.4.5.6',     '>=', '1.2.3-alpha.4.5.6',      '<',  '1.2.3-alpha.4.6.0' ],
-      [ '~1.2.3-alpha.4.5.6-rev', '>=', '1.2.3-alpha.4.5.6-rev',  '<',  '1.2.3-alpha.4.6.0-rev' ],
+    it "should filter with proper operators (x#{operators.length})" do
+      operators.each do |o|
+        matching_semantic_version = @version.send :find_matching_semantic_version, criteria: "#{o}1.2.3", versions_array: []
 
-      # x placeholder
-      [ '1.x',                '>=', '1.0.0',              '<',  '2.0.0' ],
-      [ '1.2.x',              '>=', '1.2.0',              '<',  '1.3.0' ],
-      [ '1.2.3-alpha.x',      '>=', '1.2.3-alpha.0.0.0',  '<',  '1.2.3' ],
-      [ '1.2.3-alpha.4.x',    '>=', '1.2.3-alpha.4.0.0',  '<',  '1.2.3-alpha.5.0.0' ],
-      [ '1.2.3-alpha.4.5.x',  '>=', '1.2.3-alpha.4.5.0',  '<',  '1.2.3-alpha.4.6.0' ],
-
-      # >=
-      [ '>=1',                  '>=', '1.0.0' ],
-      [ '>=1.2',                '>=', '1.2.0' ],
-      [ '>=1.2.3',              '>=', '1.2.3' ],
-      [ '>=1.2.3-alpha',        '>=', '1.2.3-alpha.0.0.0' ],
-      [ '>=1.2.3-alpha.4',      '>=', '1.2.3-alpha.4.0.0' ],
-      [ '>=1.2.3-alpha.4.5',    '>=', '1.2.3-alpha.4.5.0' ],
-      [ '>=1.2.3-alpha.4.5.6',  '>=', '1.2.3-alpha.4.5.6' ],
-
-      # >
-      [ '>1',                 '>',  '1.0.0' ],
-      [ '>1.2',               '>',  '1.2.0' ],
-      [ '>1.2.3',             '>',  '1.2.3' ],
-      [ '>1.2.3-alpha',       '>',  '1.2.3-alpha.0.0.0' ],
-      [ '>1.2.3-alpha.4',     '>',  '1.2.3-alpha.4.0.0' ],
-      [ '>1.2.3-alpha.4.5',   '>',  '1.2.3-alpha.4.5.0' ],
-      [ '>1.2.3-alpha.4.5.6', '>',  '1.2.3-alpha.4.5.6' ],
-
-      # <=
-      [ '<=1',                  '<=', '1.0.0' ],
-      [ '<=1.2',                '<=', '1.2.0' ],
-      [ '<=1.2.3',              '<=', '1.2.3' ],
-      [ '<=1.2.3-alpha',        '<=', '1.2.3-alpha.0.0.0' ],
-      [ '<=1.2.3-alpha.4',      '<=', '1.2.3-alpha.4.0.0' ],
-      [ '<=1.2.3-alpha.4.5',    '<=', '1.2.3-alpha.4.5.0' ],
-      [ '<=1.2.3-alpha.4.5.6',  '<=', '1.2.3-alpha.4.5.6' ],
-
-      # <
-      [ '<1',                 '<',  '1.0.0' ],
-      [ '<1.2',               '<',  '1.2.0' ],
-      [ '<1.2.3',             '<',  '1.2.3' ],
-      [ '<1.2.3-alpha',       '<',  '1.2.3-alpha.0.0.0' ],
-      [ '<1.2.3-alpha.4',     '<',  '1.2.3-alpha.4.0.0' ],
-      [ '<1.2.3-alpha.4.5',   '<',  '1.2.3-alpha.4.5.0' ],
-      [ '<1.2.3-alpha.4.5.6', '<',  '1.2.3-alpha.4.5.6' ]
-
-    ].each do |cov| # criteria, operator, version
-      it "should handle `#{cov[0]}`" do
-        criteria = cov.shift
-
-        @version.send :find_matching_semantic_version, criteria: criteria, versions_array: [1, 2]
-
-        cov_args = []
-        until cov.empty?
-          args = cov.shift(2)
-          cov_args << {
-            versions_array: [1, 2],
-            operator: args[0],
-            version: args[1]
-          }
+        case
+        when o.empty?         # no operator
+          expect(@filter_versions_calls).to eq ['==']
+        when o.include?('~')  # ~, ~> (pessimistic) operators, or .x placeholders
+          expect(@filter_versions_calls).to eq ['>=', '<']
+        else                  # >=, >, <=, < operator operators
+          expect(@filter_versions_calls).to eq [o.strip]
         end
 
-        expect(@filter_versions_calls).to eq cov_args
+        expect(matching_semantic_version).to be_a Semantic::Version
+        expect(matching_semantic_version.to_s).to eq '3.2.1'
+
+        # clear method calls array
+        @filter_versions_calls = []
+      end
+
+      expect(@version).to have_received(:filter_versions).at_least(operators.length).times
+    end
+  end
+
+  describe '#get_valid_semantic_version' do
+    before do
+      allow(@version).to receive(:assemble_semantic_version)
+    end
+
+    after do
+      allow(@version).to receive(:assemble_semantic_version).and_call_original
+    end
+
+    context 'when increment is true' do
+      semantic_versions[:versions].each do |sv|
+        operators.each do |o|
+          it "should accept #{o}#{sv[:version]} and return #{sv[:full_incremented]}" do
+            criteria = "#{o}#{sv[:version]}"
+            complete_version_array = sv[:full_incremented].match(Sourcerer::SEMANTIC_VERSION_ARTIFACT_REGEX).to_a
+            complete_version_array[0] = criteria
+
+            @version.send :get_valid_semantic_version, criteria: criteria, increment: true
+
+            expect(@version).to have_received(:assemble_semantic_version).with({ criteria_array: complete_version_array })
+          end
+        end
+      end
+    end
+
+    context 'when increment is false' do
+      semantic_versions[:versions].each do |sv|
+        operators.each do |o|
+          it "should accept #{o}#{sv[:version]} and return #{sv[:full]}" do
+            criteria = "#{o}#{sv[:version]}"
+            complete_version_array = sv[:full].match(Sourcerer::SEMANTIC_VERSION_ARTIFACT_REGEX).to_a
+            complete_version_array[0] = criteria
+
+            @version.send :get_valid_semantic_version, criteria: criteria, increment: false
+
+            expect(@version).to have_received(:assemble_semantic_version).with({ criteria_array: complete_version_array })
+          end
+        end
       end
     end
   end

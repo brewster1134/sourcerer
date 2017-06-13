@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.email     = 'brewster1134+sourcerer@gmail.com'
 
   # https://en.wikipedia.org/wiki/Ruby_(programming_language)#Table_of_versions
-  s.required_ruby_version = '>= 2.2.5'
+  s.required_ruby_version = '>= 2.3'
 
   s.add_runtime_dependency 'activesupport', '>0'
   s.add_runtime_dependency 'cli_miami', '>0'
