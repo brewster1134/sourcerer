@@ -3,35 +3,30 @@ en: &en
     errors:
       cli:
         install:
-          no_package_found: "No package for %{package_name} was found. Check that the package name, version and/or type are correct"
+          no_package_found: No package for %{name} was found. Check that the package name, version and/or type are correct
       sourcerer:
         install:
-          multiple_packages_found: "Multiple packages for %{package_name} were found. Set `type` to one of the following types: %{package_types}"
-          no_package_found: "No package for %{package_name} was found. Check that the package name, version and/or type are correct"
+          multiple_packages_found: "Multiple packages for %{name}#%{package_version} were found. Set `type` to one of the following types: %{types}"
+          no_package_found: No package for %{name} was found. Check that the package name, version and/or type are correct
       package:
-        download:
-          download_method_not_defined: No download method defined for package type %{package_type}
-        search:
-          search_method_not_defined: No search method defined for package type %{package_type}
-        versions:
-          versions_method_not_defined: No versions method defined for package type %{package_type}
-          # any_type:
-          #   no_packages_found: "%{package_name} with version %{version} could not not be found. Verify the package name & version"
-          # single_type:
-          #   no_package_found: "%{package_name} with version %{version} could not not be found using %{type}. Verify the package name & version, or try a different type"
-      packages:
-        no_package_found: "%{package_name} is not a %{package_type} package"
+        download_failed: "%{name}#%{package_version} was unable to be downloaded"
+        method_not_defined: No %{method_name} method is defined for the %{package_type} package type
+        search_failed: No %{name} package coulde be found with %{package_type}
+        version_failed: No %{name} was found with version "%{package_version}
+    package:
+      download_success: "%{name}#%{package_version} was downloaded to %{package_destination}"
 
     cli:
       install:
         description: Install a package
-        installing_package: Installing %{package_name} from %{type} to %{destination}
-        multiple_packages_found: Multiple packages for %{package_name} were found. Choose the type to install from...
-
+        multiple_packages_found: Multiple packages for %{name} were found. Choose the type to install from...
+        pending: Installing %{name}#%{package_version} from %{type}
         success: Installation Complete
         options:
           destination:
             description: Specify the directory to install packages to
+          force:
+            description: Forces installation from remote instaed of using the cache
           type:
             description: Specify the type of package to install
           version:

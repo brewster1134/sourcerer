@@ -22,8 +22,7 @@ module Sourcerer
 
   # Default Configuration
   DEFAULT_CACHE_DIRECTORY = '/Library/Caches/sourcerer'
-  DEFAULT_PACKAGES_DIRECTORY = 'sourcerer_packages'
-  DEFAULT_DESTINATION_DIRECTORY = File.join(Dir.pwd, DEFAULT_PACKAGES_DIRECTORY)
+  DEFAULT_DESTINATION_DIRECTORY = File.join(Dir.pwd, 'sourcerer_packages')
 
   SEMANTIC_VERSION_OPERATORS = ['<', '<=', '>', '>=', '~', '~>']
   # matches semantic versions using a wildcard or pessimistic operator
@@ -33,9 +32,9 @@ module Sourcerer
 
   # Entrypoint for Sourcerer via Ruby
   #
-  def self.install package_name, version: :latest, type: :any, destination: DEFAULT_DESTINATION_DIRECTORY
+  def self.install name, version: :latest, type: :any, force: false, destination: DEFAULT_DESTINATION_DIRECTORY
     # search for package
-    packages = Sourcerer::Package.search package_name: package_name, version: version, type: type.to_sym
+    packages = Sourcerer::Package.search name: name, version: version, type: type.to_sym
 
     # if a single package is found, continue
     if packages[:success].length == 1
@@ -43,11 +42,13 @@ module Sourcerer
 
     # if multiple packages are found, raise an error
     elsif packages[:success].length > 1
-      package_types = packages[:success].collect { |package| package.type.to_s }.join(', ')
-      raise Sourcerer::Error.new 'sourcerer.install.multiple_packages_found', package_name: package_name, package_types: package_types
+      types = packages[:success].collect { |package| package.type.to_s }.join(', ')
+      raise Sourcerer::Error.new 'sourcerer.install.multiple_packages_found', name: name, version: version, types: types
 
     # if no packages are found, show errors and raise an exception
     elsif packages[:success].length == 0
+      CliMiami::S.ay I18n.t('sourcerer.errors.cli.install.no_package_found', name: name), preset: :sourcerer_success
+
       # show errors from each attempted package type search
       packages[:fail].each do |package|
         package.errors.each do |error|
@@ -55,10 +56,10 @@ module Sourcerer
         end
       end
 
-      raise Sourcerer::Error.new 'sourcerer.install.no_package_found', package_name: package_name
+      raise Sourcerer::Error.new 'sourcerer.install.no_package_found', name: name
     end
 
     # install package
-    package.install destination: destination
+    package.install destination: destination, force: force
   end
 end

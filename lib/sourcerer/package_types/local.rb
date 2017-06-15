@@ -3,7 +3,7 @@ module Sourcerer
     class Local < Sourcerer::Package
       # @see Sourcerer::Package#search
       #
-      def search package_name:, version:
+      def search name:, version:
       end
 
       # @see Sourcerer::Package#download
@@ -13,7 +13,7 @@ module Sourcerer
 
       # @see Sourcerer::Package#versions
       #
-      def versions package_name:
+      def versions name:
       end
     end
   end

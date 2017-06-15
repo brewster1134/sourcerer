@@ -18,20 +18,21 @@ RSpec.describe Sourcerer::Cli do
 
         allow(@package).to receive(:install)
         allow(@package).to receive(:type)
+        allow(@package).to receive(:errors)
         allow(Sourcerer::Package).to receive(:search).and_return({
           success: [@package]
         })
 
-        @cli.options = { version: '1.2.3', type: 'foo_type', destination: 'packages_dir' }
+        @cli.options = { version: '1.2.3', type: 'foo_type', destination: 'packages_dir', force: false }
         @cli.install 'package_foo'
       end
 
       it 'should install the package in the right order' do
         expect(CliMiami::A).to_not have_received(:sk)
-        expect(@package).to_not have_received(:type)
-
-        expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: :foo_type).ordered
-        expect(@package).to have_received(:install).with(destination: 'packages_dir').ordered
+        expect(@package).to_not have_received(:errors)
+        expect(Sourcerer::Package).to have_received(:search).with(name: 'package_foo', version: '1.2.3', type: :foo_type).ordered
+        expect(@package).to have_received(:type).once.ordered
+        expect(@package).to have_received(:install).with(destination: 'packages_dir', force: false).ordered
       end
     end
 
@@ -49,18 +50,18 @@ RSpec.describe Sourcerer::Cli do
           success: [@package_one, @package_two]
         })
 
-        @cli.options = { version: '1.2.3', type: 'any', destination: 'packages_dir' }
+        @cli.options = { version: '1.2.3', type: 'any', destination: 'packages_dir', force: false }
         @cli.install 'package_foo'
       end
 
       it 'should prompt the user & install the package in the right order' do
         expect(@package_one).to_not have_received(:install)
 
-        expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: :any).ordered
-        expect(@package_one).to have_received(:type).ordered
-        expect(@package_two).to have_received(:type).ordered
+        expect(Sourcerer::Package).to have_received(:search).with(name: 'package_foo', version: '1.2.3', type: :any).ordered
         expect(CliMiami::A).to have_received(:sk).with(include('multiple_packages_found', 'package_foo'), type: :multiple_choice, choices: { 'foo_type' => @package_one, 'bar_type' => @package_two }, max: 1).ordered
-        expect(@package_two).to have_received(:install).with(destination: 'packages_dir').ordered
+        expect(@package_two).to have_received(:install).with(destination: 'packages_dir', force: false).ordered
+        expect(@package_one).to have_received(:type)
+        expect(@package_two).to have_received(:type).twice
       end
     end
 
@@ -85,7 +86,7 @@ RSpec.describe Sourcerer::Cli do
         expect(CliMiami::A).to_not have_received(:sk)
         expect(@package).to_not have_received(:install)
 
-        expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: :any).ordered
+        expect(Sourcerer::Package).to have_received(:search).with(name: 'package_foo', version: '1.2.3', type: :any).ordered
         expect(CliMiami::S).to have_received(:ay).with('package error', Hash).exactly(1).times.ordered
       end
     end

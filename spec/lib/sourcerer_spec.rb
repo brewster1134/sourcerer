@@ -5,16 +5,26 @@ RSpec.describe Sourcerer do
         @package = Sourcerer::Package.allocate
 
         allow(@package).to receive(:install)
+        allow(CliMiami::S).to receive(:ay)
+        allow(Sourcerer::Error).to receive(:new)
         allow(Sourcerer::Package).to receive(:search).and_return({
           success: [@package]
         })
 
-        @sourcerer_install = Sourcerer.install 'package_foo', destination: 'packages_dir', version: '1.2.3', type: 'foo_type'
+        @sourcerer_install = Sourcerer.install 'package_foo', version: '1.2.3', type: 'foo_type', destination: 'packages_dir'
+      end
+
+      after do
+        allow(CliMiami::S).to receive(:ay).and_call_original
+        allow(Sourcerer::Error).to receive(:new).and_call_original
+        allow(Sourcerer::Package).to receive(:search).and_call_original
       end
 
       it 'should install the package in the right order' do
-        expect(Sourcerer::Package).to have_received(:search).with(package_name: 'package_foo', version: '1.2.3', type: :foo_type).ordered
-        expect(@package).to have_received(:install).with(destination: 'packages_dir').ordered
+        expect(Sourcerer::Error).to_not have_received(:new)
+        expect(CliMiami::S).to_not have_received(:ay)
+        expect(Sourcerer::Package).to have_received(:search).with(name: 'package_foo', version: '1.2.3', type: :foo_type).ordered
+        expect(@package).to have_received(:install).with(destination: 'packages_dir', force: false).ordered
       end
     end
 
@@ -29,11 +39,11 @@ RSpec.describe Sourcerer do
           success: [@package_one, @package_two]
         })
 
-        @sourcerer_install = ->{ Sourcerer.install 'package_foo', destination: 'packages_dir', version: '1.2.3', type: :any }
+        @sourcerer_install = ->{ Sourcerer.install 'package_foo', version: '1.2.3', type: :any, destination: 'packages_dir' }
       end
 
       it 'should raise an error' do
-        expect{ @sourcerer_install[] }.to raise_error Sourcerer::Error, 'multiple_packages_found package_foo foo_type, bar_type'
+        expect{ @sourcerer_install[] }.to raise_error Sourcerer::Error, 'multiple_packages_found package_foo 1.2.3 foo_type, bar_type'
       end
     end
 

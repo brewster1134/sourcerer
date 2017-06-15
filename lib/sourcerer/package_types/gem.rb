@@ -3,7 +3,7 @@ module Sourcerer
     class Gem < Sourcerer::Package
       # @see Sourcerer::Package#search
       #
-      def search package_name:, version:
+      def search name:, version:
       end
 
       # @see Sourcerer::Package#download
@@ -13,20 +13,20 @@ module Sourcerer
 
       # @see Sourcerer::Package#versions
       #
-      def versions package_name:
+      def versions name:
       end
 
       private
 
-      def get_latest_version package_name:
-        response = RestClient.get "https://rubygems.org/api/v1/versions/#{package_name}/latest.yaml"
+      def get_latest_version name:
+        response = RestClient.get "https://rubygems.org/api/v1/versions/#{name}/latest.yaml"
         YAML.load(response)['version']
       rescue
         nil
       end
 
-      def get_url_by_version package_name:, version:
-        response = RestClient.get "https://rubygems.org/api/v1/versions/#{package_name}.yaml"
+      def get_url_by_version name:, version:
+        response = RestClient.get "https://rubygems.org/api/v1/versions/#{name}.yaml"
         versions = YAML.load(response)
 
         versions.find{ |v| v['number'] == version.to_s } || nil

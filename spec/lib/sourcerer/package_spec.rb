@@ -24,16 +24,16 @@ RSpec.describe Sourcerer::Package do
   describe '.search' do
     before do
       class SearchFoo
-        def initialize package_name:, version:, type:; end
-        def source; :foo; end
+        def initialize name:, version:, type:; end
+        def exists; true; end
       end
       class SearchBar
-        def initialize package_name:, version:, type:; end
-        def source; :bar; end
+        def initialize name:, version:, type:; end
+        def exists; true; end
       end
       class SearchBaz
-        def initialize package_name:, version:, type:; end
-        def source; :baz; end
+        def initialize name:, version:, type:; end
+        def exists; true; end
       end
 
       Sourcerer::Package.class_variable_set :@@subclasses, {
@@ -53,13 +53,13 @@ RSpec.describe Sourcerer::Package do
 
     context 'when searching any type' do
       before do
-        @packages = Sourcerer::Package.search package_name: 'package_name', version: '1.2.3', type: :any
+        @packages = Sourcerer::Package.search name: 'name', version: '1.2.3', type: :any
       end
 
       it 'should search each package type' do
-        expect(SearchFoo).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_one)
-        expect(SearchBar).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_two)
-        expect(SearchBaz).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_three)
+        expect(SearchFoo).to have_received(:new).with(name: 'name', version: '1.2.3', type: :type_one)
+        expect(SearchBar).to have_received(:new).with(name: 'name', version: '1.2.3', type: :type_two)
+        expect(SearchBaz).to have_received(:new).with(name: 'name', version: '1.2.3', type: :type_three)
       end
 
       it 'should return an array with the packages' do
@@ -72,13 +72,13 @@ RSpec.describe Sourcerer::Package do
 
     context 'when searching multiple specific types' do
       before do
-        @packages = Sourcerer::Package.search package_name: 'package_name', version: '1.2.3', type: ['type_one', 'type_three']
+        @packages = Sourcerer::Package.search name: 'name', version: '1.2.3', type: [:type_one, :type_three]
       end
 
       it 'should search only the specific package types' do
-        expect(SearchFoo).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_one)
+        expect(SearchFoo).to have_received(:new).with(name: 'name', version: '1.2.3', type: :type_one)
         expect(SearchBar).to_not have_received(:new)
-        expect(SearchBaz).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_three)
+        expect(SearchBaz).to have_received(:new).with(name: 'name', version: '1.2.3', type: :type_three)
       end
 
       it 'should return an array with the packages' do
@@ -91,12 +91,12 @@ RSpec.describe Sourcerer::Package do
 
     context 'when searching a specific type' do
       before do
-        @packages = Sourcerer::Package.search package_name: 'package_name', version: '1.2.3', type: 'type_two'
+        @packages = Sourcerer::Package.search name: 'name', version: '1.2.3', type: :type_two
       end
 
       it 'should search only the specific package type' do
         expect(SearchFoo).to_not have_received(:new)
-        expect(SearchBar).to have_received(:new).with(package_name: 'package_name', version: '1.2.3', type: :type_two)
+        expect(SearchBar).to have_received(:new).with(name: 'name', version: '1.2.3', type: :type_two)
         expect(SearchBaz).to_not have_received(:new)
       end
 
@@ -115,72 +115,103 @@ RSpec.describe Sourcerer::Package do
   describe '#add_error' do
     before do
       @package = Sourcerer::Package.allocate
-      @package.instance_variable_set :@errors, []
+      @package.instance_variable_set :@errors, [:foo]
 
-      allow(Sourcerer::Error).to receive(:new).and_return 'error_foo'
-
-      @package.add_error 'add_error', foo: 'FOO'
+      allow(Sourcerer::Error).to receive(:new).and_return :bar
     end
 
     after do
       allow(Sourcerer::Error).to receive(:new).and_call_original
     end
 
-    it 'should add a Sourcerer::Error instance' do
-      expect(Sourcerer::Error).to have_received(:new).with 'packages.add_error', foo: 'FOO'
-      expect(@package.errors).to include 'error_foo'
+    it 'should prepend a Sourcerer::Error instance' do
+      result = @package.add_error 'error', prepend: true
+
+      expect(Sourcerer::Error).to have_received(:new).with 'package.error', prepend: true
+      expect(result).to eq [:bar, :foo]
+    end
+
+    it 'should append a Sourcerer::Error instance' do
+      result = @package.add_error 'error', prepend: false
+
+      expect(Sourcerer::Error).to have_received(:new).with 'package.error', prepend: false
+      expect(result).to eq [:foo, :bar]
     end
   end
 
   describe '#install' do
     before do
       @package = Sourcerer::Package.allocate
+      allow(@package).to receive(:download)
+      allow(@package).to receive(:add_error)
+      allow(@package).to receive(:name).and_return 'name'
+      allow(@package).to receive(:type).and_return :spec
+      allow(@package).to receive(:version).and_return '1.2.3'
+      allow(FileUtils).to receive(:mkdir_p)
+      allow(FileUtils).to receive(:cp_r)
+
       @cache_dir = File.expand_path(File.join(__dir__, '..', '..', 'fixtures', 'cache'))
       @packages_dir = File.expand_path(File.join(__dir__, '..', '..', 'fixtures', 'packages'))
-
-      # start with a clean directory
-      FileUtils.rm_rf @packages_dir
-
-      allow(@package).to receive(:download)
-      allow(@package).to receive(:name).and_return 'package_name'
-      allow(@package).to receive(:version).and_return '1.2.3'
-      allow(FileUtils).to receive(:mkdir_p).and_call_original
-      allow(FileUtils).to receive(:cp_r).and_call_original
+      @cache_destination_path = File.join(@cache_dir, @package.name, @package.version)
+      @packages_destination_path = File.join(@packages_dir, @package.name, @package.version)
 
       stub_const "Sourcerer::DEFAULT_CACHE_DIRECTORY", @cache_dir
+
+      # start with a clean directory
+      FileUtils.rm_rf "#{@cache_dir}/*"
+      FileUtils.rm_rf "#{@packages_dir}/*"
+    end
+
+    after do
+      allow(Dir).to receive(:glob).and_call_original
+      allow(FileUtils).to receive(:mkdir_p).and_call_original
+      allow(FileUtils).to receive(:cp_r).and_call_original
     end
 
     context 'when package is cached' do
       before do
-        allow(@package).to receive(:source).and_return 'cached_package'
+        allow(Dir).to receive(:glob).and_return [1]
 
-        @package.install destination: @packages_dir
+        @package.install destination: @packages_dir, force: false
       end
 
-      it 'should install in the right order' do
-        expect(FileUtils).to have_received(:mkdir_p).with(@cache_dir).ordered
+      it 'should run in the right order' do
+        expect(FileUtils).to have_received(:mkdir_p).with(@cache_destination_path).ordered
         expect(@package).to_not have_received(:download)
-        expect(FileUtils).to have_received(:cp_r).with(File.join(@cache_dir, 'cached_package_123', '.'), File.join(@packages_dir, 'package_name')).ordered
-      end
-
-      it 'should install to the right directory' do
-        expect(File.directory? File.join(@packages_dir, 'package_name')).to be true
-        expect(File.exists? File.join(@packages_dir, 'package_name', 'cached_package.txt')).to be true
-        expect(File.read(File.join(@packages_dir, 'package_name', 'cached_package.txt'))).to include 'Cached Package'
+        expect(@package).to_not have_received(:add_error)
+        expect(FileUtils).to have_received(:cp_r).with("#{@cache_destination_path}/.", @package.destination).ordered
       end
     end
 
     context 'when package is not cached' do
-      before do
-        allow(@package).to receive(:source).and_return 'uncached_package'
+      context 'when download succeeds' do
+        before do
+          allow(Dir).to receive(:glob).and_return [1]
 
-        @package.install destination: @packages_dir
+          @package.install destination: @packages_dir, force: true
+        end
+
+        it 'should run in the right order' do
+          expect(FileUtils).to have_received(:mkdir_p).with(@cache_destination_path).ordered
+          expect(@package).to have_received(:download).with({ to: @cache_destination_path  }).ordered
+          expect(@package).to_not have_received(:add_error)
+          expect(FileUtils).to have_received(:cp_r).with("#{@cache_destination_path}/.", @package.destination).ordered
+        end
       end
 
-      it 'should install in the right order' do
-        expect(FileUtils).to have_received(:mkdir_p).with(@cache_dir).ordered
-        expect(@package).to have_received(:download).with({ source: 'uncached_package', destination: File.join(@cache_dir, 'uncached_package_123') }).ordered
-        expect(FileUtils).to have_received(:cp_r).with(File.join(@cache_dir, 'uncached_package_123', '.'), File.join(@packages_dir, 'package_name')).ordered
+      context 'when download fails' do
+        before do
+          allow(Dir).to receive(:glob).and_return []
+
+          @package.install destination: @packages_dir, force: true
+        end
+
+        it 'should run in the right order' do
+          expect(FileUtils).to have_received(:mkdir_p).with(@cache_destination_path).ordered
+          expect(@package).to have_received(:download).with({ to: @cache_destination_path  }).ordered
+          expect(@package).to have_received(:add_error).ordered
+          expect(FileUtils).to_not have_received(:cp_r)
+        end
       end
     end
   end
@@ -253,29 +284,64 @@ RSpec.describe Sourcerer::Package do
   describe '#initialize' do
     before do
       class InitializeFoo < Sourcerer::Package
-        def search package_name:, version:; end
       end
 
-      allow_any_instance_of(InitializeFoo).to receive(:search)
+      allow_any_instance_of(InitializeFoo).to receive(:search).and_return true
+      allow_any_instance_of(InitializeFoo).to receive(:versions).and_return :poop
+      allow_any_instance_of(InitializeFoo).to receive(:find_matching_version).and_return :fart
     end
 
     after do
       Sourcerer::Package.class_variable_get(:@@subclasses).delete(:package_spec)
     end
 
-    context 'when passed a semantic version' do
-      it 'should search with a semantic version' do
-        expect_any_instance_of(InitializeFoo).to receive(:search).with(package_name: 'package_foo', version: Semantic::Version)
+    context 'when search fails' do
+      before do
+        allow_any_instance_of(InitializeFoo).to receive(:search).and_return false
+      end
 
-        InitializeFoo.new package_name: 'package_foo', version: '1.2.3', type: 'type'
+      it 'should return with an error' do
+        expect_any_instance_of(InitializeFoo).to receive(:search)
+        expect_any_instance_of(InitializeFoo).to receive(:add_error)
+        expect_any_instance_of(InitializeFoo).to_not receive(:find_matching_version)
+
+        version = InitializeFoo.new name: 'package_foo', version: '1.2.3', type: 'type'
+
+        expect(version.exists).to eq false
       end
     end
 
-    context 'when passed a non-semantic version' do
-      it 'should search with a string' do
-        expect_any_instance_of(InitializeFoo).to receive(:search).with(package_name: 'package_foo', version: 'version')
+    context 'when finding a version fails' do
+      before do
+        allow_any_instance_of(InitializeFoo).to receive(:search).and_return true
+        allow_any_instance_of(InitializeFoo).to receive(:find_matching_version).and_return false
+      end
 
-        InitializeFoo.new package_name: 'package_foo', version: 'version', type: 'type'
+      it 'should return with an error' do
+        expect_any_instance_of(InitializeFoo).to receive(:search)
+        expect_any_instance_of(InitializeFoo).to receive(:find_matching_version)
+        expect_any_instance_of(InitializeFoo).to receive(:add_error)
+
+        version = InitializeFoo.new name: 'package_foo', version: 'version', type: 'type'
+
+        expect(version.exists).to eq false
+      end
+    end
+
+    context 'when search and version succeed' do
+      before do
+        allow_any_instance_of(InitializeFoo).to receive(:search).and_return true
+        allow_any_instance_of(InitializeFoo).to receive(:find_matching_version).and_return true
+      end
+
+      it 'should return true' do
+        expect_any_instance_of(InitializeFoo).to receive(:search)
+        expect_any_instance_of(InitializeFoo).to receive(:find_matching_version)
+        expect_any_instance_of(InitializeFoo).to_not receive(:add_error)
+
+        version = InitializeFoo.new name: 'package_foo', version: 'version', type: 'type'
+
+        expect(version.exists).to eq true
       end
     end
   end

@@ -116,7 +116,7 @@ module Sourcerer
     class Foo < Sourcerer::Package          # 2
       # @see Sourcerer::Package#search
       #
-      def search package_name:, version:    # 3
+      def search name:, version:    # 3
         # INSERT SEARCH LOGIC HERE          # 3.1
         return 'source'                     # 3.2
 
@@ -140,7 +140,7 @@ end
 
 1. Namespace with `Sourcerer::Packages`
 2. Inherit from `< Sourcerer::Package`
-3. Define a `search` method that accepts `package_name` & `version`
+3. Define a `search` method that accepts `name` & `version`
   1. Write code to search for a compatible version based on the package `name` & `version`
   2. If a compatible package is found, return the `source` that the `download` method requires
   3. If no package could be found, `return false`
@@ -171,3 +171,4 @@ add_error 'foo.download.problem_y', foo: 'bar'    # 3
 1. Add i18n values for your errors, namespaced with `en.sourcerer.errors.packages`
 2. Further namespace your error with the name of the type & the method `foo.search`
 3. Optionally you can pass values into your error using the format `%{foo}`
+4. write a .sourcerer file to project

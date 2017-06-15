@@ -3,13 +3,13 @@ module Sourcerer
     class Bower < Sourcerer::Package
       # @see Sourcerer::Package#search
       #
-      def search package_name:, version:
+      def search name:, version:
         # look for package url, and return false if not found
-        url = get_url package_name
+        url = get_url name
         return false if url.nil?
 
         # search for package with the url, and return false unless a single package isn't found
-        url_packages = Sourcerer::Package.search package_name: package_name, version: version, type: [:git, :url]
+        url_packages = Sourcerer::Package.search name: name, version: version, type: [:git, :url]
         return false unless url_packages[:success].length == 1
 
         # package found. set the new package and return source
@@ -25,16 +25,16 @@ module Sourcerer
 
       # @see Sourcerer::Package#versions
       #
-      def versions package_name:
-        @url_package.versions package_name: package_name
+      def versions name:
+        @url_package.versions name: name
       end
 
       private
 
       # Get Bower package url
       #
-      def get_url package_name
-        response = RestClient.get "http://bower.herokuapp.com/packages/#{package_name}"
+      def get_url name
+        response = RestClient.get "http://bower.herokuapp.com/packages/#{name}"
         JSON.load(response)['url']
       rescue
         nil

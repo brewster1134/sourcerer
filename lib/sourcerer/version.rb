@@ -7,6 +7,8 @@ module Sourcerer
     # @return [String]
     #
     def find_matching_version version:, versions_array:
+      version = Semantic::Version.new(version) rescue version
+
       # if version isn't a semantic version, but has a semantic version wildcard/operator
       if !version.is_a?(Semantic::Version) && version.match(Sourcerer::SEMANTIC_VERSION_WILDCARD_REGEX)
         find_matching_semantic_version criteria: version, versions_array: versions_array
