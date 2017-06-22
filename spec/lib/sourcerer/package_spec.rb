@@ -1,6 +1,6 @@
 # Basic package type sanity check
 RSpec.describe Sourcerer::Packages do
-  Sourcerer::Package.class_variable_get(:@@subclasses).each do |package_type, package_class|
+  Sourcerer::Package.class_variable_get(:@@subclasses).each do |type, package_class|
     describe package_class do
       it 'should define a download method' do
         expect(package_class.instance_methods(false)).to include :download
@@ -25,15 +25,15 @@ RSpec.describe Sourcerer::Package do
     before do
       class SearchFoo
         def initialize name:, version:, type:; end
-        def exists; true; end
+        def version; '1.2.3'; end
       end
       class SearchBar
         def initialize name:, version:, type:; end
-        def exists; true; end
+        def version; '1.2.3'; end
       end
       class SearchBaz
         def initialize name:, version:, type:; end
-        def exists; true; end
+        def version; '1.2.3'; end
       end
 
       Sourcerer::Package.class_variable_set :@@subclasses, {
@@ -116,6 +116,7 @@ RSpec.describe Sourcerer::Package do
     before do
       @package = Sourcerer::Package.allocate
       @package.instance_variable_set :@errors, [:foo]
+      @package.instance_variable_set :@type, :bar
 
       allow(Sourcerer::Error).to receive(:new).and_return :bar
     end
@@ -124,17 +125,19 @@ RSpec.describe Sourcerer::Package do
       allow(Sourcerer::Error).to receive(:new).and_call_original
     end
 
-    it 'should prepend a Sourcerer::Error instance' do
-      result = @package.add_error 'error', prepend: true
+    it 'should add an error from the package parent class' do
+      allow(@package.class).to receive(:name).and_return 'Sourcerer::Package'
+      result = @package.add_error 'error'
 
-      expect(Sourcerer::Error).to have_received(:new).with 'package.error', prepend: true
+      expect(Sourcerer::Error).to have_received(:new).with 'package.error', Hash
       expect(result).to eq [:bar, :foo]
     end
 
-    it 'should append a Sourcerer::Error instance' do
-      result = @package.add_error 'error', prepend: false
+    it 'should add an error from a type subclass' do
+      allow(@package.class).to receive(:name).and_return 'Sourcerer::Packages::Foo'
+      result = @package.add_error 'error'
 
-      expect(Sourcerer::Error).to have_received(:new).with 'package.error', prepend: false
+      expect(Sourcerer::Error).to have_received(:new).with 'package.error.bar', Hash
       expect(result).to eq [:foo, :bar]
     end
   end
@@ -179,7 +182,7 @@ RSpec.describe Sourcerer::Package do
         expect(FileUtils).to have_received(:mkdir_p).with(@cache_destination_path).ordered
         expect(@package).to_not have_received(:download)
         expect(@package).to_not have_received(:add_error)
-        expect(FileUtils).to have_received(:cp_r).with("#{@cache_destination_path}/.", @package.destination).ordered
+        expect(FileUtils).to have_received(:cp_r).with("#{@cache_destination_path}/.", @packages_dir).ordered
       end
     end
 
@@ -195,7 +198,7 @@ RSpec.describe Sourcerer::Package do
           expect(FileUtils).to have_received(:mkdir_p).with(@cache_destination_path).ordered
           expect(@package).to have_received(:download).with({ to: @cache_destination_path  }).ordered
           expect(@package).to_not have_received(:add_error)
-          expect(FileUtils).to have_received(:cp_r).with("#{@cache_destination_path}/.", @package.destination).ordered
+          expect(FileUtils).to have_received(:cp_r).with("#{@cache_destination_path}/.", @packages_dir).ordered
         end
       end
 
@@ -283,65 +286,59 @@ RSpec.describe Sourcerer::Package do
   #
   describe '#initialize' do
     before do
-      class InitializeFoo < Sourcerer::Package
-      end
+      @package = Sourcerer::Package.allocate
 
-      allow_any_instance_of(InitializeFoo).to receive(:search).and_return true
-      allow_any_instance_of(InitializeFoo).to receive(:versions).and_return :poop
-      allow_any_instance_of(InitializeFoo).to receive(:find_matching_version).and_return :fart
-    end
-
-    after do
-      Sourcerer::Package.class_variable_get(:@@subclasses).delete(:package_spec)
+      allow(@package).to receive(:versions)
     end
 
     context 'when search fails' do
       before do
-        allow_any_instance_of(InitializeFoo).to receive(:search).and_return false
+        allow(@package).to receive(:search).and_return false
       end
 
-      it 'should return with an error' do
-        expect_any_instance_of(InitializeFoo).to receive(:search)
-        expect_any_instance_of(InitializeFoo).to receive(:add_error)
-        expect_any_instance_of(InitializeFoo).to_not receive(:find_matching_version)
+      it 'should not set the version' do
+        expect(@package).to receive(:search).ordered
+        expect(@package).to receive(:add_error).ordered
+        expect(@package).to_not receive(:find_matching_version)
 
-        version = InitializeFoo.new name: 'package_foo', version: '1.2.3', type: 'type'
+        @package.send(:initialize, name: 'package_foo', version: '1.2.3', type: 'type')
 
-        expect(version.exists).to eq false
+        expect(@package.version).to be_nil
       end
     end
 
     context 'when finding a version fails' do
       before do
-        allow_any_instance_of(InitializeFoo).to receive(:search).and_return true
-        allow_any_instance_of(InitializeFoo).to receive(:find_matching_version).and_return false
+        allow(@package).to receive(:search).and_return true
+        allow(@package).to receive(:find_matching_version).and_return nil
       end
 
-      it 'should return with an error' do
-        expect_any_instance_of(InitializeFoo).to receive(:search)
-        expect_any_instance_of(InitializeFoo).to receive(:find_matching_version)
-        expect_any_instance_of(InitializeFoo).to receive(:add_error)
+      it 'should not set the version' do
+        expect(@package).to receive(:search).ordered
+        expect(@package).to receive(:versions).ordered
+        expect(@package).to receive(:find_matching_version).ordered
+        expect(@package).to receive(:add_error).ordered
 
-        version = InitializeFoo.new name: 'package_foo', version: 'version', type: 'type'
+        @package.send(:initialize, name: 'package_foo', version: 'version', type: 'type')
 
-        expect(version.exists).to eq false
+        expect(@package.version).to be_nil
       end
     end
 
     context 'when search and version succeed' do
       before do
-        allow_any_instance_of(InitializeFoo).to receive(:search).and_return true
-        allow_any_instance_of(InitializeFoo).to receive(:find_matching_version).and_return true
+        allow(@package).to receive(:search).and_return true
+        allow(@package).to receive(:find_matching_version).and_return '1.2.3'
       end
 
-      it 'should return true' do
-        expect_any_instance_of(InitializeFoo).to receive(:search)
-        expect_any_instance_of(InitializeFoo).to receive(:find_matching_version)
-        expect_any_instance_of(InitializeFoo).to_not receive(:add_error)
+      it 'should set the version' do
+        expect(@package).to receive(:search).ordered
+        expect(@package).to receive(:find_matching_version).ordered
+        expect(@package).to_not receive(:add_error)
 
-        version = InitializeFoo.new name: 'package_foo', version: 'version', type: 'type'
+        @package.send(:initialize, name: 'package_foo', version: 'version', type: 'type')
 
-        expect(version.exists).to eq true
+        expect(@package.version).to eq '1.2.3'
       end
     end
   end

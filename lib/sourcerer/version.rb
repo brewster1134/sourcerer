@@ -158,9 +158,10 @@ module Sourcerer
       assemble_semantic_version criteria_array: criteria_array_copy
     end
 
-    # create a valid semantic version string from a sourcerer criteria array
-    # @param [Array]  A sourcerer criteria array
-    # @return [String]  A valud semantic version string
+    # Create a valid semantic version string from a criteria array
+    #
+    # @param criteria_array [Array<String>] A criteria array
+    # @return [String]  A valid semantic version
     #
     def assemble_semantic_version criteria_array:
       criteria_string = ''

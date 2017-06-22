@@ -7,11 +7,16 @@ module Sourcerer
     #
 
     # Search for a package with the version & type(s) specified
-    # @param [Hash] options
-    # @option options [String] name A name of the package to search for
-    # @option options [String] version A specific version to search for
-    # @option options [Symbol] type The type(s) of package to search for
-    # @return [Hash] Hash of success and fail arrays of packages
+    #
+    # @param name [String] A package name to search for
+    # @param version [String] Criteria to filter by
+    # @param type [Symbol, Array] The type(s) of package to search for
+    # @return [Hash] Hash of initialized packages, separated by success/fail
+    # @example
+    #   {
+    #     success: [ SUCCESSFUL SOURCERER::PACKAGE INSTANCE ],
+    #     fail: [ FAILED SOURCERER::PACKAGE INSTANCE ]
+    #   }
     #
     def self.search name:, version:, type: :any
       packages = {
@@ -25,7 +30,7 @@ module Sourcerer
           subclass = subclasses[t]
 
           package = subclass.new name: name, version: version, type: t
-          if package.exists
+          if package.version
             packages[:success] << package
           else
             packages[:fail] << package
@@ -36,7 +41,7 @@ module Sourcerer
       elsif type.to_sym == :any
         subclasses.each do |subclass_type, subclass|
           package = subclass.new name: name, version: version, type: subclass_type
-          if package.exists
+          if package.version
             packages[:success] << package
           else
             packages[:fail] << package
@@ -47,7 +52,7 @@ module Sourcerer
       else
         subclass = subclasses[type]
         package = subclass.new name: name, version: version, type: type
-        if package.exists
+        if package.version
           packages[:success] << package
         else
           packages[:fail] << package
@@ -57,19 +62,24 @@ module Sourcerer
       return packages
     end
 
-    #
-    # PUBLIC INSTANCE METHODS
-    #
-    attr_reader :errors, :name, :source, :type, :version, :exists, :destination
+    attr_reader :name, :version, :type
 
     # Register a package error
+    # @param i18n_keys [String] A dot separated string of keys that match the i18n yaml structure
+    # @param [Hash] args Options to be passed through to the new error instance
     #
-    def add_error i18n_keys, args = {}
-      error = Sourcerer::Error.new("package.#{i18n_keys}", args)
-      if args[:prepend]
-        errors.unshift error
+    def add_error i18n_keys, **args
+      called_from_type = self.class.name != 'Sourcerer::Package'
+
+      i18n_keys_array = ['package', i18n_keys]
+      i18n_keys_array << type.to_s if called_from_type
+
+      error = Sourcerer::Error.new(i18n_keys_array.join('.'), args)
+
+      if called_from_type
+        @errors << error
       else
-        errors << error
+        @errors.unshift error
       end
     end
 
@@ -87,11 +97,11 @@ module Sourcerer
       end
 
       if Dir.glob("#{cache_destination_path}/*").empty?
-        add_error 'download_failed', prepend: true, name: name, package_version: version
+        add_error 'download.fail', name: name, version: version
         return false
       end
 
-      FileUtils.cp_r "#{cache_destination_path}/.", destination
+      FileUtils.cp_r "#{cache_destination_path}/.", @destination
     end
 
     private
@@ -117,55 +127,49 @@ module Sourcerer
     #
 
     # Create a new package instance and search for a matching version
-    # @param [Hash] options
-    # @option options [String] name A name of the package to search for
-    # @option options [String] version A specific version to search for
-    # @option options [Symbol] type The package type being initialized
-    # @return [True, False] if package and version both exist
+    # @see Sourcerer::Package#search
     #
     def initialize name:, version:, type:
       @errors = []
-      @exists = false
       @name = name
       @type = type.to_sym
 
       # If no source was found, add a generic error as the first error
       unless search
-        add_error 'search_failed', prepend: true, name: @name, package_type: @type
+        add_error 'search.fail', name: @name, type: @type
         return
       end
 
       @version = find_matching_version version: version, versions_array: versions
       unless @version
-        add_error 'version_failed', prepend: true, name: @name, package_version: version
+        add_error 'version.fail', name: @name, version: version
         return
       end
-
-      @exists = !!@version
     end
 
     # Download the package
     # @note The download method needs defined in the package type class in their respective packages/[TYPE].rb file
-    # @return [True, False] Boolean depending on if the download succeeds or fails
+    # @param to [String] Final location for the downloaded package
+    # @return [Boolean] If package version is downloaded to cache
     #
     def download to:
-      raise Sourcerer::Error.new 'package.method_not_defined', method_name: 'download', package_type: self.type
+      raise Sourcerer::Error.new 'package.method_not_defined', method_name: 'download', type: self.type
     end
 
-    # Verify the package exists for the given package type & ignoring the version
+    # Check that a package exists
     # @note The search method needs defined in the package type class in their respective packages/[TYPE].rb file
-    # @return [True, False] Boolean depending if the package is found or not
+    # @return [Boolean] If the package is found
     #
     def search
-      raise Sourcerer::Error.new 'package.method_not_defined', method_name: 'search', package_type: self.type
+      raise Sourcerer::Error.new 'package.method_not_defined', method_name: 'search', type: self.type
     end
 
     # Return a list of all available versions/tags for a given package
     # @note The versions method needs defined in the package type class in their respective packages/[TYPE].rb file
-    # @return [Array] An array of all available package versions or tags to choose from
+    # @return [Array<String>] An array of all available package versions or tags
     #
     def versions
-      raise Sourcerer::Error.new 'package.method_not_defined', method_name: 'versions', package_type: self.type
+      raise Sourcerer::Error.new 'package.method_not_defined', method_name: 'versions', type: self.type
     end
   end
 

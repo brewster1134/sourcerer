@@ -38,12 +38,12 @@ module Sourcerer
             CliMiami::S.ay error.message, preset: :sourcerer_error
           end
         end
-
-        return
       end
 
+      return unless package
+
       # install package
-      CliMiami::S.ay I18n.t('sourcerer.cli.install.pending', name: name, package_version: package.version, type: package.type.to_s), preset: :sourcerer_pending
+      CliMiami::S.ay I18n.t('sourcerer.cli.install.pending', name: name, version: package.version, type: package.type.to_s), preset: :sourcerer_pending
       package.install destination: options[:destination], force: options[:force]
 
       CliMiami::S.ay I18n.t('sourcerer.cli.install.success'), preset: :sourcerer_success

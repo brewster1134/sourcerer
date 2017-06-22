@@ -6,21 +6,24 @@ en: &en
           no_package_found: No package for %{name} was found. Check that the package name, version and/or type are correct
       sourcerer:
         install:
-          multiple_packages_found: "Multiple packages for %{name}#%{package_version} were found. Set `type` to one of the following types: %{types}"
+          multiple_packages_found: "Multiple packages for %{name}#%{version} were found. Set `type` to one of the following types: %{types}"
           no_package_found: No package for %{name} was found. Check that the package name, version and/or type are correct
       package:
-        download_failed: "%{name}#%{package_version} was unable to be downloaded"
-        method_not_defined: No %{method_name} method is defined for the %{package_type} package type
-        search_failed: No %{name} package coulde be found with %{package_type}
-        version_failed: No %{name} was found with version "%{package_version}
+        method_not_defined: No %{method_name} method is defined for the %{type} package type
+        download:
+          failed: "%{name}#%{version} was unable to be downloaded"
+        search:
+          failed: No %{type} package named %{name} could be found
+        version:
+          failed: No %{name} package was found with version "%{version}
     package:
-      download_success: "%{name}#%{package_version} was downloaded to %{package_destination}"
+      download_success: "%{name}#%{version} was downloaded to %{destination}"
 
     cli:
       install:
         description: Install a package
         multiple_packages_found: Multiple packages for %{name} were found. Choose the type to install from...
-        pending: Installing %{name}#%{package_version} from %{type}
+        pending: Installing %{name}#%{version} from %{type}
         success: Installation Complete
         options:
           destination:
