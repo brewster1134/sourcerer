@@ -1,23 +1,29 @@
 en: &en
   sourcerer:
     errors:
-      cli:
-        install:
-          no_package_found: No package for %{name} was found. Check that the package name, version and/or type are correct
-      sourcerer:
-        install:
-          multiple_packages_found: "Multiple packages for %{name}#%{version} were found. Set `type` to one of the following types: %{types}"
-          no_package_found: No package for %{name} was found. Check that the package name, version and/or type are correct
-      package:
+      initialize:
+        no_package_found: No %{type} package for %{name} was found. Verify that the name and type are correct
+        multiple_packages_found: Multiple packages for %{name}#%{version} were found. Set the type to one of... %{types}
+      package: &package
         method_not_defined: No %{method_name} method is defined for the %{type} package type
-        download:
-          failed: "%{name}#%{version} was unable to be downloaded"
-        search:
-          failed: No %{type} package named %{name} could be found
-        version:
-          failed: No %{name} package was found with version "%{version}
-    package:
-      download_success: "%{name}#%{version} was downloaded to %{destination}"
+        download_fail: "%{name}#%{version} was unable to be downloaded"
+        search_fail: No %{type} package named %{name} could be found
+        version_fail: No %{name} package for %{version} could be found
+
+        # PACKAGE ERRORS
+        bower:
+          <<: *package
+          get_url: No url was found for the bower %{name} package
+        gem:
+          <<: *package
+        git:
+          <<: *package
+        local:
+          <<: *package
+        npm:
+          <<: *package
+        url:
+          <<: *package
 
     cli:
       install:
@@ -26,14 +32,10 @@ en: &en
         pending: Installing %{name}#%{version} from %{type}
         success: Installation Complete
         options:
-          destination:
-            description: Specify the directory to install packages to
-          force:
-            description: Forces installation from remote instaed of using the cache
-          type:
-            description: Specify the type of package to install
-          version:
-            description: Specify the version to install
+          destination_description: Specify the directory to install packages to
+          force_description: Forces installation from remote instaed of using the cache
+          type_description: Specify the type of package to install
+          version_description: Specify the version to install
       help:
         description: Show all commands or get information on a specific one
 

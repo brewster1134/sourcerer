@@ -1,23 +1,29 @@
 spec:
   sourcerer:
     errors:
-      cli:
-        install:
-          no_package_found: no_package_found %{name}
-      sourcerer:
-        install:
-          multiple_packages_found: multiple_packages_found %{name} %{version} %{types}
-          no_package_found: no_package_found %{name}
-      package:
-        download:
-          failed: failed %{name} %{version}
+      initialize:
+        no_package_found: no_package_found %{type} %{name}
+        multiple_packages_found: multiple_packages_found %{name} %{version} %{types}
+      package: &package
         method_not_defined: method_not_defined %{method_name} %{type}
-        search:
-          failed: failed %{name} %{type}
-        version:
-          failed: failed %{name} %{version}
-    package:
-      download_success: download_success %{name} %{version} %{destination}
+        download_fail: download_fail %{name} %{version}
+        search_fail: search_fail %{type} %{name}
+        version_fail: version_fail %{name} %{version}
+
+        # PACKAGE ERRORS
+        bower:
+          <<: *package
+          get_url: get_url %{name}
+        gem:
+          <<: *package
+        git:
+          <<: *package
+        local:
+          <<: *package
+        npm:
+          <<: *package
+        url:
+          <<: *package
 
     cli:
       install:
@@ -26,13 +32,9 @@ spec:
         pending: pending %{name} %{version} %{type}
         success: success
         options:
-          destination:
-            description: description
-          force:
-            description: description
-          type:
-            description: description
-          version:
-            description: description
+          destination_description: description
+          force_description: description
+          type_description: description
+          version_description: description
       help:
         description: description

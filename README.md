@@ -111,7 +111,7 @@ A package manager
 #### Creating a Package Type
 
 ```ruby
-module Sourcerer
+class Sourcerer
   module Packages                           # 1
     class Foo < Sourcerer::Package          # 2
       # @see Sourcerer::Package#search

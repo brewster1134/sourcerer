@@ -11,7 +11,7 @@ RSpec.describe Sourcerer::Packages::Bower do
 
     context 'when package is found' do
       before do
-        allow(@bower).to receive(:get_url).and_return true
+        allow(@bower).to receive(:get_url).and_return 'url.git'
         allow(Sourcerer::Package).to receive(:search).and_return({ success: [@package] })
         allow(@package).to receive(:version).and_return true
       end
@@ -20,7 +20,7 @@ RSpec.describe Sourcerer::Packages::Bower do
         @bower.search
 
         expect(@bower).to have_received(:get_url).ordered
-        expect(Sourcerer::Package).to have_received(:search).with({ name: 'bower_package', version: '1.2.3', type: :git }).ordered
+        expect(Sourcerer::Package).to have_received(:search).with({ name: 'url.git', version: '1.2.3', type: :git }).ordered
         expect(@package).to have_received(:version).ordered
       end
     end

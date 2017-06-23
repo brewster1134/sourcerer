@@ -1,19 +1,19 @@
-module Sourcerer
+class Sourcerer
   module Packages
     class Npm < Sourcerer::Package
       # @see Sourcerer::Package#search
       #
-      def search name:, version:
+      def search
       end
 
       # @see Sourcerer::Package#download
       #
-      def download
+      def download to:
       end
 
       # @see Sourcerer::Package#versions
       #
-      def versions name:
+      def versions
       end
     end
   end

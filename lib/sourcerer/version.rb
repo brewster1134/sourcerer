@@ -1,4 +1,4 @@
-module Sourcerer
+class Sourcerer
   module Version
     # Searchs for a matching version based on user criteria and available versions
     #
@@ -7,10 +7,11 @@ module Sourcerer
     # @return [String]
     #
     def find_matching_version version:, versions_array:
-      version = Semantic::Version.new(version) rescue version
-
-      # if version isn't a semantic version, but has a semantic version wildcard/operator
-      if !version.is_a?(Semantic::Version) && version.match(Sourcerer::SEMANTIC_VERSION_WILDCARD_REGEX)
+      # handle special tags
+      if version == :latest
+        versions_array.max.to_s
+      # if version has a semantic version wildcard/operator
+      elsif version.match(Sourcerer::SEMANTIC_VERSION_WILDCARD_REGEX)
         find_matching_semantic_version criteria: version, versions_array: versions_array
       elsif versions_array.include? version
         version.to_s
@@ -28,8 +29,8 @@ module Sourcerer
       has_placeholder = !criteria.scan(/\.x/).empty?
 
       # create filter variables
-      filtered_versions = versions_array.dup
       filters = []
+      filtered_versions = versions_array.dup.map{ |ver| Semantic::Version.new(ver) rescue nil }.compact
 
       # no operator
       # if operator == nil && minor != 'x' && patch != 'x' && pre_major != 'x' && pre_minor != 'x' && pre_patch != 'x'
@@ -68,6 +69,14 @@ module Sourcerer
       end
 
       return filtered_versions.max
+    end
+
+    def filter_versions versions_array:, operator:, version:
+      sem_ver = Semantic::Version.new(version)
+
+      versions_array.select do |v|
+        v.send operator.to_sym, sem_ver
+      end
     end
 
     # Array Legend
@@ -185,15 +194,6 @@ module Sourcerer
       end
 
       return criteria_string
-    end
-
-    def filter_versions versions_array:, operator:, version:
-      versions_array.select do |v|
-        v.send operator.to_sym, version
-      end
-
-      # # find all semantic versions
-      # semantic_versions = versions_array.select{ |version| Semantic::Version.new(version) rescue false }
     end
   end
 end
