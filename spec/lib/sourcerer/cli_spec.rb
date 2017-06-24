@@ -2,93 +2,19 @@ RSpec.describe Sourcerer::Cli do
   describe '#install' do
     before do
       @cli = Sourcerer::Cli.allocate
+      @cli.options = { cli: true, destination: Sourcerer::DEFAULT_DESTINATION, force: Sourcerer::DEFAULT_FORCE, type: Sourcerer::DEFAULT_TYPE, version: Sourcerer::DEFAULT_VERSION }
 
-      allow(CliMiami::A).to receive(:sk)
-      allow(CliMiami::S).to receive(:ay)
+      allow(Sourcerer).to receive(:install)
     end
 
     after do
-      allow(CliMiami::A).to receive(:sk).and_call_original
-      allow(CliMiami::S).to receive(:ay).and_call_original
+      allow(Sourcerer).to receive(:install).and_call_original
     end
 
-    context 'when a single package is found' do
-      before do
-        @package = Sourcerer::Package.allocate
+    it 'should initialize a new Sourcerer instance with defaults' do
+      @cli.install 'foo'
 
-        allow(@package).to receive(:install)
-        allow(@package).to receive(:type)
-        allow(@package).to receive(:errors)
-        allow(Sourcerer::Package).to receive(:search).and_return({
-          success: [@package]
-        })
-
-        @cli.options = { version: '1.2.3', type: 'foo_type', destination: 'packages_dir', force: false }
-        @cli.install 'package_foo'
-      end
-
-      it 'should install the package in the right order' do
-        expect(CliMiami::A).to_not have_received(:sk)
-        expect(@package).to_not have_received(:errors)
-        expect(Sourcerer::Package).to have_received(:search).with(name: 'package_foo', version: '1.2.3', type: :foo_type).ordered
-        expect(@package).to have_received(:type).once.ordered
-        expect(@package).to have_received(:install).with(destination: 'packages_dir', force: false).ordered
-      end
-    end
-
-    context 'when multiple packages are found' do
-      before do
-        @package_one = Sourcerer::Package.allocate
-        @package_two = Sourcerer::Package.allocate
-
-        allow(@package_one).to receive(:install)
-        allow(@package_one).to receive(:type).and_return 'foo_type'
-        allow(@package_two).to receive(:install)
-        allow(@package_two).to receive(:type).and_return 'bar_type'
-        allow(CliMiami::A).to receive(:sk).and_return('bar_type': @package_two)
-        allow(Sourcerer::Package).to receive(:search).and_return({
-          success: [@package_one, @package_two]
-        })
-
-        @cli.options = { version: '1.2.3', type: 'any', destination: 'packages_dir', force: false }
-        @cli.install 'package_foo'
-      end
-
-      it 'should prompt the user & install the package in the right order' do
-        expect(@package_one).to_not have_received(:install)
-
-        expect(Sourcerer::Package).to have_received(:search).with(name: 'package_foo', version: '1.2.3', type: :any).ordered
-        expect(CliMiami::A).to have_received(:sk).with(include('multiple_packages_found', 'package_foo'), type: :multiple_choice, choices: { 'foo_type' => @package_one, 'bar_type' => @package_two }, max: 1).ordered
-        expect(@package_two).to have_received(:install).with(destination: 'packages_dir', force: false).ordered
-        expect(@package_one).to have_received(:type)
-        expect(@package_two).to have_received(:type).twice
-      end
-    end
-
-    context 'when no packages are found' do
-      before do
-        @package = Sourcerer::Package.allocate
-        @error = Sourcerer::Error.allocate
-
-        allow(@error).to receive(:message).and_return 'package error'
-        allow(@package).to receive(:errors).and_return [@error]
-        allow(@package).to receive(:install)
-        allow(Sourcerer::Package).to receive(:search).and_return({
-          success: [],
-          fail: [@package]
-        })
-
-        @cli.options = { version: '1.2.3', type: 'any', destination: 'packages_dir' }
-        @cli.install 'package_foo'
-      end
-
-      it 'should show the user an error in the right order' do
-        expect(CliMiami::A).to_not have_received(:sk)
-        expect(@package).to_not have_received(:install)
-
-        expect(Sourcerer::Package).to have_received(:search).with(name: 'package_foo', version: '1.2.3', type: :any).ordered
-        expect(CliMiami::S).to have_received(:ay).with('package error', Hash).exactly(1).times.ordered
-      end
+      expect(Sourcerer).to have_received(:install).with('foo', @cli.options)
     end
   end
 end

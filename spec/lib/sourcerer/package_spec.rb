@@ -309,4 +309,30 @@ RSpec.describe Sourcerer::Package do
       end
     end
   end
+
+  describe '.latest' do
+    context 'if subclass has method defined' do
+      it 'should call it' do
+        class HasLatestMethod < Sourcerer::Package
+          def latest; 'latest version'; end
+        end
+
+        @package = HasLatestMethod.allocate
+
+        expect(@package.send(:latest)).to eq 'latest version'
+      end
+    end
+
+    context 'if subclass does not have method defined' do
+      it 'should call use the first version' do
+        class NoLatestMethod < Sourcerer::Package
+          def versions; ['first version', 'second version']; end
+        end
+
+        @package = NoLatestMethod.allocate
+
+        expect(@package.send(:latest)).to eq 'first version'
+      end
+    end
+  end
 end

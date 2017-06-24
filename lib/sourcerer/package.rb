@@ -169,6 +169,14 @@ class Sourcerer
     def versions
       add_error 'method_not_defined', method_name: 'versions', type: type
     end
+
+    # Return a list of all available versions/tags for a given package
+    # @note The latest method needs defined in the package type class in their respective packages/[TYPE].rb file
+    # @return [String] If not defined, the first available version will be considered the latest
+    #
+    def latest
+      versions.first
+    end
   end
 
   # Require all the package types

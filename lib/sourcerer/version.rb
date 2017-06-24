@@ -8,15 +8,15 @@ class Sourcerer
     #
     def find_matching_version version:, versions_array:
       # handle special tags
-      if version == :latest
-        versions_array.max.to_s
+      return latest if version == :latest
+
       # if version has a semantic version wildcard/operator
-      elsif version.match(Sourcerer::SEMANTIC_VERSION_WILDCARD_REGEX)
+      if version.is_a?(String) && version.match(Sourcerer::SEMANTIC_VERSION_WILDCARD_REGEX)
         find_matching_semantic_version criteria: version, versions_array: versions_array
-      elsif versions_array.include? version
+      elsif versions_array.include? version.to_s
         version.to_s
       else
-        nil
+        latest
       end
     end
 
