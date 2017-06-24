@@ -59,7 +59,7 @@ class Sourcerer
       return packages
     end
 
-    attr_reader :name, :version, :type, :errors, :destination, :force
+    attr_reader :name, :version, :type, :errors
 
     # Register a package error
     # @param i18n_keys [String] A dot separated string of keys that match the i18n yaml structure
@@ -130,7 +130,7 @@ class Sourcerer
     def initialize name:, version:
       @errors = []
       @name = name
-      @type = @@type
+      @type = Sourcerer::Package.type
 
       # If no source was found, add a generic error as the first error
       unless search
@@ -140,7 +140,7 @@ class Sourcerer
 
       @version = find_matching_version version: version, versions_array: versions
       unless @version
-        add_error 'version_fail', name: @name, version: version
+        add_error 'version_fail', name: @name, version: @version
         return
       end
     end
@@ -171,7 +171,7 @@ class Sourcerer
     end
 
     # Return a list of all available versions/tags for a given package
-    # @note The latest method needs defined in the package type class in their respective packages/[TYPE].rb file
+    # @note The latest method can be also defined in the package type class in their respective packages/[TYPE].rb file
     # @return [String] If not defined, the first available version will be considered the latest
     #
     def latest
