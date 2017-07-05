@@ -146,23 +146,23 @@ RSpec.describe Sourcerer::Package do
     before do
       @package = Sourcerer::Package.allocate
       @cache_dir = File.expand_path(File.join(__dir__, '..', '..', 'fixtures', 'cache'))
-      @package_cache_dir = File.expand_path(File.join(@cache_dir, 'foo', '1.2.3'))
+      @package_cache_dir = File.join(@cache_dir, 'foo', '1.2.3')
       @package_dir = File.expand_path(File.join(__dir__, '..', '..', 'fixtures', 'packages'))
-      @destination = File.expand_path(File.join(@package_dir, 'foo', '1.2.3'))
+      @destination = File.join(@package_dir, 'foo', '1.2.3')
 
-      allow(File).to receive(:join).and_return @package_cache_dir
+      stub_const 'Sourcerer::DEFAULT_CACHE_DIRECTORY', @cache_dir
+      allow(File).to receive(:join).and_call_original
       allow(FileUtils).to receive(:mkdir_p)
       allow(FileUtils).to receive(:cp_r)
       allow(@package).to receive(:download)
       allow(@package).to receive(:add_error)
       allow(@package).to receive(:name).and_return('foo')
       allow(@package).to receive(:version).and_return('1.2.3')
-      allow(@package).to receive(:destination).and_return(@destination)
+      allow(@package).to receive(:destination).and_return(@package_dir)
       allow(@package).to receive(:force).and_return(false)
     end
 
     after do
-      allow(File).to receive(:join).and_call_original
       allow(Dir).to receive(:glob).and_call_original
       allow(FileUtils).to receive(:mkdir_p).and_call_original
       allow(FileUtils).to receive(:cp_r).and_call_original
@@ -176,7 +176,6 @@ RSpec.describe Sourcerer::Package do
       end
 
       it 'should copy the cached package' do
-        expect(FileUtils).to_not have_received(:mkdir_p)
         expect(@package).to_not have_received(:download)
         expect(@package).to_not have_received(:add_error)
         expect(FileUtils).to have_received(:cp_r).with("#{@package_cache_dir}/.", @destination).ordered
@@ -192,7 +191,6 @@ RSpec.describe Sourcerer::Package do
         end
 
         it 'should run in the right order' do
-          expect(FileUtils).to have_received(:mkdir_p).with(@package_cache_dir).ordered
           expect(@package).to have_received(:download).with({ to: @package_cache_dir }).ordered
           expect(@package).to_not have_received(:add_error)
           expect(FileUtils).to have_received(:cp_r).with("#{@package_cache_dir}/.", @destination).ordered
@@ -207,7 +205,6 @@ RSpec.describe Sourcerer::Package do
         end
 
         it 'should run in the right order' do
-          expect(FileUtils).to have_received(:mkdir_p).with(@package_cache_dir).ordered
           expect(@package).to have_received(:download).with({ to: @package_cache_dir }).ordered
           expect(@package).to have_received(:add_error).with('download_fail', Hash).ordered
           expect(FileUtils).to_not have_received(:cp_r)

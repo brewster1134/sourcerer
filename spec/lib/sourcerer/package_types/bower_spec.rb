@@ -7,13 +7,13 @@ RSpec.describe Sourcerer::Packages::Bower do
 
   describe '#search' do
     before do
-      allow(Sourcerer).to receive(:new).and_return @sourcerer
+      allow(Sourcerer).to receive(:install).and_return @sourcerer
       allow(@sourcerer).to receive(:package).and_return(@git_package)
       allow(@git_package).to receive(:install)
     end
 
     after do
-      allow(Sourcerer).to receive(:new).and_call_original
+      allow(Sourcerer).to receive(:install).and_call_original
     end
 
     context 'when package is found' do
@@ -26,7 +26,7 @@ RSpec.describe Sourcerer::Packages::Bower do
 
       it 'should search the underlying bower source url for a package' do
         expect(@bower).to have_received(:get_git_url).ordered
-        expect(Sourcerer).to have_received(:new).with(Hash).ordered
+        expect(Sourcerer).to have_received(:install).with(String, Hash).ordered
         expect(@git_package).to have_received(:version).ordered
         expect(@git_package).to have_received(:install).ordered
 
@@ -44,7 +44,7 @@ RSpec.describe Sourcerer::Packages::Bower do
 
       it 'should not search further' do
         expect(@bower).to have_received(:get_git_url).ordered
-        expect(Sourcerer).to_not have_received(:new)
+        expect(Sourcerer).to_not have_received(:install)
         expect(@git_package).to_not have_received(:version)
         expect(@git_package).to_not have_received(:install)
 

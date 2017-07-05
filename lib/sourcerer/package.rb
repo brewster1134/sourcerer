@@ -92,7 +92,10 @@ class Sourcerer
         return false
       end
 
-      FileUtils.cp_r "#{cache_dir}/.", destination
+      destination_dir = File.join(destination, name, version.to_s)
+      FileUtils.mkdir_p destination_dir
+
+      FileUtils.cp_r "#{cache_dir}/.", destination_dir
     end
 
     private

@@ -16,7 +16,7 @@ class Sourcerer
       # @see Sourcerer::Package#versions
       #
       def versions
-        case @remote_source
+        versions = case @remote_source
         when :github
           begin
             @releases_json = JSON.load(RestClient.get("https://api.github.com/repos/#{@user}/#{@repo}/releases"))
@@ -33,6 +33,11 @@ class Sourcerer
         else
           nil
         end
+
+        # set name to just the repo name
+        @name = @repo
+
+        return versions
       end
 
       # @see Sourcerer::Package#download
