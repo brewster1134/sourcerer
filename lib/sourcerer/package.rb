@@ -79,7 +79,6 @@ class Sourcerer
     #
     def install
       # run the pre-installation hook
-      puts self.public_methods
       pre_install if respond_to? :pre_install
 
       # create cache directory
@@ -144,6 +143,14 @@ class Sourcerer
         add_error 'version_fail', name: name, version: version
         return
       end
+    end
+
+    def download_tar url:, to:
+      # download and extract
+      response = RestClient.get(url)
+      tmp_file = Tempfile.new
+      File.write(tmp_file.path, response.to_s)
+      `tar -x -f #{tmp_file.path} -C #{to} --strip 1`
     end
 
     # Download the package

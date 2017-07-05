@@ -46,11 +46,7 @@ class Sourcerer
             @tags_json.first{ |v| v['name'] }['tarball_url']
           end
 
-          # download and extract
-          response = RestClient.get(tar_url)
-          tmp_file = Tempfile.new
-          File.write(tmp_file.path, response.to_s)
-          `tar -x -f #{tmp_file.path} -C #{to} --strip 1`
+          download_tar url: tar_url, to: to
         when :bitbucket
         else
           nil

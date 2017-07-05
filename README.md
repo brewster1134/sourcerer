@@ -40,9 +40,6 @@ A package manager
       * `brewster1134/sourcerer`
     * repo
       * `https://website.com/brewster1134/sourcerer.git`
-  * local
-    * `relative/path`
-    * `/absolute/path`
   * npm
     * `grunt`
   * url
@@ -96,9 +93,6 @@ A package manager
         * `git branch`
       * commit
         * `git log --pretty=oneline`
-  * local
-    * latest
-    * git _see git:repo type_
   * npm
     * latest
       * `http://registry.npmjs.org/grunt/latest`

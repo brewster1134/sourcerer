@@ -10,6 +10,8 @@ class Sourcerer
       # handle special tags
       return latest if version == :latest
 
+      puts version, versions_array
+
       # if version has a semantic version wildcard/operator
       if version.is_a?(String) && version.match(Sourcerer::SEMANTIC_VERSION_WILDCARD_REGEX)
         find_matching_semantic_version criteria: version, versions_array: versions_array
@@ -31,7 +33,7 @@ class Sourcerer
       # create filter variables
       filters = []
       filtered_versions = versions_array.dup.map{ |ver| Semantic::Version.new(ver) rescue nil }.compact
-
+      puts filtered_versions.inspect
       # no operator
       # if operator == nil && minor != 'x' && patch != 'x' && pre_major != 'x' && pre_minor != 'x' && pre_patch != 'x'
       if operator.empty? && !has_placeholder
