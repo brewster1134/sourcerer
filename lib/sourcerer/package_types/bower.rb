@@ -9,9 +9,7 @@ class Sourcerer
         return false if git_url.nil?
 
         # search for package with the url, and return false unless a single package isn't found
-        git_instance = Sourcerer.new cli: cli, destination: destination, force: force, name: git_url, type: :git, version: version
-        packages = git_instance.packages
-        @git_package = packages[:success].first
+        @git_package = Sourcerer.new cli: cli, destination: destination, force: force, name: git_url, type: :git, version: version
         return false if @git_package.version.nil?
 
         @git_package.install

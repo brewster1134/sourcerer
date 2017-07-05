@@ -1,7 +1,38 @@
 RSpec.describe Sourcerer::Packages::Git do
-  describe '#search' do
+  before do
+    @git_package = Sourcerer::Packages::Git.allocate
   end
 
-  describe '#download' do
+  describe '#search' do
+    before do
+      allow(@git_package).to receive(:name).and_return 'brewster1134/sourcerer'
+
+      expect(@git_package).to receive(:name).ordered
+      expect(@git_package).to receive(:does_remote_repo_exist).with('brewster1134', 'sourcerer').ordered
+    end
+
+    context 'if git repo is found' do
+      before do
+        allow(@git_package).to receive(:does_remote_repo_exist).and_return true
+
+        @git_search = @git_package.search
+      end
+
+      it 'should return true' do
+        expect(@git_search).to eq true
+      end
+    end
+
+    context 'if git repo is not found' do
+      before do
+        allow(@git_package).to receive(:does_remote_repo_exist).and_return false
+
+        @git_search = @git_package.search
+      end
+
+      it 'should return true' do
+        expect(@git_search).to eq false
+      end
+    end
   end
 end
