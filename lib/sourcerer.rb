@@ -54,16 +54,18 @@ class Sourcerer
     self.new cli: cli, destination: destination, force: force, name: name, type: type, version: version
   end
 
+  attr_reader :package
+
   private
 
   def initialize **options
     packages = Sourcerer::Package.search options
-    package = get_package packages, options
+    @package = get_package packages, options
 
-    if package.version
-      package.install
+    if @package.version
+      @package.install
     else
-      print_package_errors [package]
+      print_package_errors [@package]
     end
   end
 

@@ -2,13 +2,14 @@ RSpec.describe Sourcerer::Packages::Bower do
   before do
     @bower = Sourcerer::Packages::Bower.allocate
     @git_package = Sourcerer::Package.allocate
-
-    allow(@git_package).to receive(:install)
+    @sourcerer = Sourcerer.allocate
   end
 
   describe '#search' do
     before do
-      allow(Sourcerer).to receive(:new).and_return @git_package
+      allow(Sourcerer).to receive(:new).and_return @sourcerer
+      allow(@sourcerer).to receive(:package).and_return(@git_package)
+      allow(@git_package).to receive(:install)
     end
 
     after do
