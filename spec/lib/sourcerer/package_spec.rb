@@ -24,15 +24,15 @@ RSpec.describe Sourcerer::Package do
   describe '.search' do
     before do
       class SearchFoo
-        def initialize name:, version:; end
+        def initialize name:, type:, version:; end
         def version; '1.2.3'; end
       end
       class SearchBar
-        def initialize name:, version:; end
+        def initialize name:, type:, version:; end
         def version; '1.2.3'; end
       end
       class SearchBaz
-        def initialize name:, version:; end
+        def initialize name:, type:, version:; end
         def version; '1.2.3'; end
       end
 
@@ -57,9 +57,9 @@ RSpec.describe Sourcerer::Package do
       end
 
       it 'should search each package type' do
-        expect(SearchFoo).to have_received(:new).with(name: 'name', version: '1.2.3')
-        expect(SearchBar).to have_received(:new).with(name: 'name', version: '1.2.3')
-        expect(SearchBaz).to have_received(:new).with(name: 'name', version: '1.2.3')
+        expect(SearchFoo).to have_received(:new).with(name: 'name', version: '1.2.3', type: :any)
+        expect(SearchBar).to have_received(:new).with(name: 'name', version: '1.2.3', type: :any)
+        expect(SearchBaz).to have_received(:new).with(name: 'name', version: '1.2.3', type: :any)
       end
 
       it 'should return an array with the packages' do
@@ -76,9 +76,9 @@ RSpec.describe Sourcerer::Package do
       end
 
       it 'should search only the specific package types' do
-        expect(SearchFoo).to have_received(:new).with(name: 'name', version: '1.2.3')
+        expect(SearchFoo).to have_received(:new).with(name: 'name', version: '1.2.3', type: [:type_one, :type_three])
         expect(SearchBar).to_not have_received(:new)
-        expect(SearchBaz).to have_received(:new).with(name: 'name', version: '1.2.3')
+        expect(SearchBaz).to have_received(:new).with(name: 'name', version: '1.2.3', type: [:type_one, :type_three])
       end
 
       it 'should return an array with the packages' do
@@ -96,7 +96,7 @@ RSpec.describe Sourcerer::Package do
 
       it 'should search only the specific package type' do
         expect(SearchFoo).to_not have_received(:new)
-        expect(SearchBar).to have_received(:new).with(name: 'name', version: '1.2.3')
+        expect(SearchBar).to have_received(:new).with(name: 'name', version: '1.2.3', type: :type_two)
         expect(SearchBaz).to_not have_received(:new)
       end
 
@@ -155,6 +155,10 @@ RSpec.describe Sourcerer::Package do
       allow(FileUtils).to receive(:cp_r)
       allow(@package).to receive(:download)
       allow(@package).to receive(:add_error)
+      allow(@package).to receive(:name).and_return('foo')
+      allow(@package).to receive(:version).and_return('1.2.3')
+      allow(@package).to receive(:destination).and_return(@destination)
+      allow(@package).to receive(:force).and_return(false)
     end
 
     after do
@@ -168,14 +172,14 @@ RSpec.describe Sourcerer::Package do
       before do
         allow(Dir).to receive(:glob).and_return ['package']
 
-        @package.install name: 'foo', version: '1.2.3', destination: @packages_dir, force: false
+        @package.install
       end
 
       it 'should copy the cached package' do
         expect(FileUtils).to_not have_received(:mkdir_p)
         expect(@package).to_not have_received(:download)
         expect(@package).to_not have_received(:add_error)
-        expect(FileUtils).to have_received(:cp_r).with("#{@package_cache_dir}/.", @packages_dir).ordered
+        expect(FileUtils).to have_received(:cp_r).with("#{@package_cache_dir}/.", @destination).ordered
       end
     end
 
@@ -184,14 +188,14 @@ RSpec.describe Sourcerer::Package do
         before do
           allow(Dir).to receive(:glob).and_return([], ['package'])
 
-          @package.install name: 'foo', version: '1.2.3', destination: @packages_dir, force: false
+          @package.install
         end
 
         it 'should run in the right order' do
           expect(FileUtils).to have_received(:mkdir_p).with(@package_cache_dir).ordered
           expect(@package).to have_received(:download).with({ to: @package_cache_dir }).ordered
           expect(@package).to_not have_received(:add_error)
-          expect(FileUtils).to have_received(:cp_r).with("#{@package_cache_dir}/.", @packages_dir).ordered
+          expect(FileUtils).to have_received(:cp_r).with("#{@package_cache_dir}/.", @destination).ordered
         end
       end
 
@@ -199,7 +203,7 @@ RSpec.describe Sourcerer::Package do
         before do
           allow(Dir).to receive(:glob).and_return([])
 
-          @package.install name: 'foo', version: '1.2.3', destination: @packages_dir, force: false
+          @package.install
         end
 
         it 'should run in the right order' do
@@ -257,6 +261,7 @@ RSpec.describe Sourcerer::Package do
   #
   describe '#initialize' do
     before do
+      Sourcerer::Package.class_variable_set :@@type, :spec
       @package = Sourcerer::Package.allocate
 
       allow(@package).to receive(:versions)
@@ -272,7 +277,7 @@ RSpec.describe Sourcerer::Package do
         expect(@package).to receive(:add_error).ordered
         expect(@package).to_not receive(:find_matching_version)
 
-        @package.send(:initialize, name: 'package_foo', version: '1.2.3')
+        @package.send(:initialize, name: 'package_foo', version: '1.2.3', destination: 'destination')
       end
     end
 
@@ -288,7 +293,7 @@ RSpec.describe Sourcerer::Package do
         expect(@package).to receive(:find_matching_version).ordered
         expect(@package).to receive(:add_error).ordered
 
-        @package.send(:initialize, name: 'package_foo', version: 'version')
+        @package.send(:initialize, name: 'package_foo', version: 'version', destination: 'destination')
       end
     end
 
@@ -303,7 +308,7 @@ RSpec.describe Sourcerer::Package do
         expect(@package).to receive(:find_matching_version).ordered
         expect(@package).to_not receive(:add_error)
 
-        @package.send(:initialize, name: 'package_foo', version: 'version')
+        @package.send(:initialize, name: 'package_foo', version: 'version', destination: 'destination')
 
         expect(@package.version).to eq '1.2.3'
       end
