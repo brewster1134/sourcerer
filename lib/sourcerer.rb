@@ -54,13 +54,11 @@ class Sourcerer
     self.new cli: cli, destination: destination, force: force, name: name, type: type, version: version
   end
 
-  attr_reader :packages
-
   private
 
   def initialize **options
-    @packages = Sourcerer::Package.search options
-    package = get_package packages
+    packages = Sourcerer::Package.search options
+    package = get_package packages, options
 
     if package.version
       package.install
@@ -69,14 +67,14 @@ class Sourcerer
     end
   end
 
-  def get_package packages
+  def get_package packages, **options
     package = nil
 
     case packages[:success].length
     when 0
-      err = Sourcerer::Error.new 'initialize.no_package_found', name: name, type: type.join(', ')
+      err = Sourcerer::Error.new 'initialize.no_package_found', name: options[:name], type: options[:type].join(', ')
 
-      if cli
+      if options[:cli]
         err.print
         print_package_errors packages[:fail]
       else
@@ -87,9 +85,9 @@ class Sourcerer
       package = packages[:success].first
     else
       types = packages[:success].collect { |package| package.type.to_s }.join(', ')
-      err = Sourcerer::Error.new 'initialize.multiple_packages_found', name: name, version: version, types: types
+      err = Sourcerer::Error.new 'initialize.multiple_packages_found', name: options[:name], version: options[:version], types: types
 
-      if cli
+      if options[:cli]
         err.print
         package = prompt_for_package packages[:success]
       else
