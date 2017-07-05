@@ -28,6 +28,11 @@ class Sourcerer
         @git_package.versions
       end
 
+      def pre_install
+        # set name to just the repo name
+        @git_package.instance_variable_set '@name', @repo
+      end
+
       private
 
       # Get Bower package url

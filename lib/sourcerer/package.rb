@@ -78,6 +78,10 @@ class Sourcerer
     # Orchestrate downloading, caching, and installing the package
     #
     def install
+      # run the pre-installation hook
+      puts self.public_methods
+      pre_install if respond_to? :pre_install
+
       # create cache directory
       cache_dir = File.join(Sourcerer::DEFAULT_CACHE_DIRECTORY, name, version.to_s)
       cache_contents = ->{ Dir.glob("#{cache_dir}/*") }
