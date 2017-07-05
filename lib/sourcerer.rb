@@ -43,27 +43,38 @@ class Sourcerer
 
   # Entrypoint for Sourcerer
   #
-  # @param name [String]  Name of a package to install
-  # @param cli  [Boolean] If Sourcerer is being run from a command line binary
-  # @param destination  [String]  A local directory to install the package to
-  # @param force  [Boolean] Download package even if it is already cached
-  # @param type [Symbol, Array<Symbol>]  Name of 1 or more supported package types
-  # @param version  [String, :latest] Available version, tag, or meta data for the given package
+  # @param name [String] Name of a package to install
+  # @param cli [Boolean] If Sourcerer is being run from a command line binary
+  # @param destination [String] A local directory to install the package to
+  # @param force [Boolean] Download package even if it is already cached
+  # @param type [#to_sym, Array<#to_sym>] Name of 1 or more supported package types
+  # @param version [String, :latest] Available version, tag, or meta data for the given package
   #
   def self.install name, cli: DEFAULT_CLI, destination: DEFAULT_DESTINATION, force: DEFAULT_FORCE, type: DEFAULT_TYPE, version: DEFAULT_VERSION
-    self.new name: name, cli: cli, destination: destination, force: force, type: type, version: version
+    self.new cli: cli, destination: destination, force: force, name: name, type: type, version: version
   end
+
+  attr_reader :packages
 
   private
 
-  def initialize name:, cli:, destination:, force:, type:, version:
-    destination = File.expand_path destination
-    packages = Sourcerer::Package.search name: name, version: version, type: type
+  def initialize **options
+    @packages = Sourcerer::Package.search options
+    package = get_package packages
+
+    if package.version
+      package.install
+    else
+      print_package_errors [package]
+    end
+  end
+
+  def get_package packages
+    package = nil
 
     case packages[:success].length
     when 0
-      type_string = type.is_a?(Array) ? type.join(', ') : type.to_s
-      err = Sourcerer::Error.new 'initialize.no_package_found', name: name, type: type_string
+      err = Sourcerer::Error.new 'initialize.no_package_found', name: name, type: type.join(', ')
 
       if cli
         err.print
@@ -74,7 +85,6 @@ class Sourcerer
       end
     when 1
       package = packages[:success].first
-      package.install name: name, version: version, destination: destination, force: force
     else
       types = packages[:success].collect { |package| package.type.to_s }.join(', ')
       err = Sourcerer::Error.new 'initialize.multiple_packages_found', name: name, version: version, types: types
@@ -82,11 +92,12 @@ class Sourcerer
       if cli
         err.print
         package = prompt_for_package packages[:success]
-        package.install name: name, version: version, destination: destination, force: force
       else
         raise err
       end
     end
+
+    return package
   end
 
   def print_package_errors failed_packages

@@ -15,51 +15,45 @@ class Sourcerer
     #     fail: [ FAILED SOURCERER::PACKAGE INSTANCE ]
     #   }
     #
-    def self.search name:, version:, type:
+    def self.search **options
+      types = [options[:type]].flatten.map(&:to_sym)
+
       packages = {
         success: [],
         fail: []
       }
 
       # search multiple package types
-      if type.is_a? Array
-        type.each do |t|
+      if types.include? :any
+        subclasses.each do |subclass_type, subclass|
+          package = subclass.new options
+          if package.version
+            packages[:success] << package
+          else
+            packages[:fail] << package
+          end
+        end
+      else
+        types.each do |t|
           subclass = subclasses[t.to_sym]
 
-          package = subclass.new name: name, version: version
+          package = subclass.new options
           if package.version
             packages[:success] << package
           else
             packages[:fail] << package
           end
-        end
-
-      # search all package types
-      elsif type.to_sym == :any
-        subclasses.each do |subclass_type, subclass|
-          package = subclass.new name: name, version: version
-          if package.version
-            packages[:success] << package
-          else
-            packages[:fail] << package
-          end
-        end
-
-      # search single package type
-      else
-        subclass = subclasses[type.to_sym]
-        package = subclass.new name: name, version: version
-        if package.version
-          packages[:success] << package
-        else
-          packages[:fail] << package
         end
       end
 
       return packages
     end
 
-    attr_reader :name, :version, :type, :errors
+    #
+    # PUBLIC INSTANCE METHODS
+    #
+
+    attr_reader :cli, :destination, :errors, :force, :name, :type, :version
 
     # Register a package error
     # @param i18n_keys [String] A dot separated string of keys that match the i18n yaml structure
@@ -83,7 +77,7 @@ class Sourcerer
 
     # Orchestrate downloading, caching, and installing the package
     #
-    def install name:, version:, destination:, force:
+    def install
       # create cache directory
       cache_dir = File.join(Sourcerer::DEFAULT_CACHE_DIRECTORY, name, version.to_s)
       cache_contents = ->{ Dir.glob("#{cache_dir}/*") }
@@ -108,16 +102,12 @@ class Sourcerer
     #
     def self.inherited subclass
       key = caller.first.match(/.+\/(.+)\.rb/)[1].to_sym
-      @@type = key
+      subclass.class_variable_set :@@type, key
       @@subclasses[key] = subclass
     end
 
     def self.subclasses key = nil
       key ? @@subclasses[key] : @@subclasses
-    end
-
-    def self.type
-      @@type
     end
 
     #
@@ -127,10 +117,14 @@ class Sourcerer
     # Create a new package instance and search for a matching version
     # @see Sourcerer::Package#search
     #
-    def initialize name:, version:
+    def initialize **options
+      @cli = options[:cli]
+      @destination = File.expand_path options[:destination]
       @errors = []
-      @name = name
-      @type = Sourcerer::Package.type
+      @force = options[:force]
+      @name = options[:name]
+      @type = self.class.class_variable_get(:@@type)
+      @version = options[:version]
 
       # If no source was found, add a generic error as the first error
       unless search
@@ -140,7 +134,7 @@ class Sourcerer
 
       @version = find_matching_version version: version, versions_array: versions
       unless @version
-        add_error 'version_fail', name: @name, version: @version
+        add_error 'version_fail', name: name, version: version
         return
       end
     end

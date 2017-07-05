@@ -1,5 +1,7 @@
 .DS_Store
 .yardoc
+sourcerer_packages
 doc
 spec/fixtures/cache
 spec/fixtures/packages
+tmp
