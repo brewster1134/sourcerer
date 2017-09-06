@@ -38,11 +38,11 @@ class Sourcerer
   # supported semantic version operators
   SEMVER_OPERATORS = ['<', '<=', '>', '>=', '~', '~>']
   # captures the artifacts needed to create a complete semantic version from a partial one
-  SEMVER_ARTIFACT_REGEX = /^([><=~]+)?\s?([0-9x]+)\.?([0-9x]+)?\.?([0-9x]+)?\-?([a-z]+)?\.?([0-9x]+)?\.?([0-9x]+)?\.?([0-9x]+)?\.?\-?(.+)?$/
-  # captures a complete semantic version from inside a string
+  SEMVER_ARTIFACT_REGEX = /^([#{SEMVER_OPERATORS.join.split(//).uniq.join}]+)?\s?([0-9]+)\.?([0-9x]+)?\.?([0-9x]+)?\-?([0-9A-Za-z-]+)?\.?([0-9]+)?\.?([0-9x]+)?\.?([0-9x]+)?(.+)?$/
+  # matches a valid semantic version
   SEMVER_COMPLETE_REGEX = /([0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z\+\-\.]*)/
-  # captures a partial semantic version with a wildcard or pessimistic operator
-  SEMVER_PARTIAL_REGEX = /^[><=~\s]{0,3}[0-9.]{1,}(?:-[0-9A-Za-z+.]*)?$/
+  # matches a partial semantic version with a wildcard or operator
+  SEMVER_PARTIAL_REGEX = /^([#{SEMVER_OPERATORS.join.split(//).uniq.join}]+)?\s?\d+([\d\.x]+)?/
 
   # Entrypoint for Sourcerer
   #

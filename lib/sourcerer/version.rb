@@ -57,7 +57,7 @@ class Sourcerer
 
       # ~, ~> (pessimistic) operators, or .x placeholders
       # elsif operator == nil || operator == '~' || operator == '~>'
-      elsif operator.include? '~' || has_placeholder
+      elsif operator.include?('~') || has_placeholder
         # add >= filter critera
         filters << {
           operator: '>=',
