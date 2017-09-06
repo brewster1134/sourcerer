@@ -30,16 +30,19 @@ class Sourcerer
   DEFAULT_CACHE_DIRECTORY = '/Library/Caches/sourcerer'
   DEFAULT_CLI = false
   DEFAULT_DESTINATION = File.join(Dir.pwd, 'sourcerer_packages')
+  DEFAULT_FILE_SYSTEM_SAFE_SUB = /[\s\']/
   DEFAULT_FORCE = false
   DEFAULT_TYPE = :any
   DEFAULT_VERSION = :latest
 
-  # semantic version configuration
-  SEMANTIC_VERSION_OPERATORS = ['<', '<=', '>', '>=', '~', '~>']
-  # matches semantic versions using a wildcard or pessimistic operator
-  SEMANTIC_VERSION_WILDCARD_REGEX = /^[><=~\s]{0,3}[0-9\.]{1,5}[a-z0-9+-\.]*$/
-  # captures the integer artifacts from a semantic version wildcard
-  SEMANTIC_VERSION_ARTIFACT_REGEX = /^([><=~]+)?\s?([0-9x]+)\.?([0-9x]+)?\.?([0-9x]+)?\-?([a-z]+)?\.?([0-9x]+)?\.?([0-9x]+)?\.?([0-9x]+)?\.?\-?(.+)?$/
+  # supported semantic version operators
+  SEMVER_OPERATORS = ['<', '<=', '>', '>=', '~', '~>']
+  # captures the artifacts needed to create a complete semantic version from a partial one
+  SEMVER_ARTIFACT_REGEX = /^([><=~]+)?\s?([0-9x]+)\.?([0-9x]+)?\.?([0-9x]+)?\-?([a-z]+)?\.?([0-9x]+)?\.?([0-9x]+)?\.?([0-9x]+)?\.?\-?(.+)?$/
+  # captures a complete semantic version from inside a string
+  SEMVER_COMPLETE_REGEX = /([0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z\+\-\.]*)/
+  # captures a partial semantic version with a wildcard or pessimistic operator
+  SEMVER_PARTIAL_REGEX = /^[><=~\s]{0,3}[0-9.]{1,}(?:-[0-9A-Za-z+.]*)?$/
 
   # Entrypoint for Sourcerer
   #
@@ -47,7 +50,7 @@ class Sourcerer
   # @param cli [Boolean] If Sourcerer is being run from a command line binary
   # @param destination [String] A local directory to install the package to
   # @param force [Boolean] Download package even if it is already cached
-  # @param type [#to_sym, Array<#to_sym>] Name of 1 or more supported package types
+  # @param type [#to_sym] A supported type
   # @param version [String, :latest] Available version, tag, or meta data for the given package
   #
   def self.install name, cli: DEFAULT_CLI, destination: DEFAULT_DESTINATION, force: DEFAULT_FORCE, type: DEFAULT_TYPE, version: DEFAULT_VERSION
@@ -60,48 +63,35 @@ class Sourcerer
 
   def initialize **options
     packages = Sourcerer::Package.search options
-    @package = get_package packages, options
 
-    if @package.version
-      @package.install
-    else
-      print_package_errors [@package]
-    end
+    @package = get_package packages, options
+    @package.install
+  rescue Sourcerer::Error => e
+    options[:cli] ? e.print : raise(e)
   end
 
   def get_package packages, **options
-    package = nil
-
     case packages[:success].length
     when 0
-      err = Sourcerer::Error.new 'initialize.no_package_found', name: options[:name], type: options[:type].join(', ')
-
-      if options[:cli]
-        err.print
-        print_package_errors packages[:fail]
-      else
-        print_package_errors packages[:fail]
-        raise err
-      end
+      print_package_errors packages[:fail]
+      raise Sourcerer::Error.new('get_package.no_package_found', name: options[:name], type: options[:type], version: options[:version])
     when 1
-      package = packages[:success].first
+      return packages[:success].first
     else
       types = packages[:success].collect { |package| package.type.to_s }.join(', ')
-      err = Sourcerer::Error.new 'initialize.multiple_packages_found', name: options[:name], version: options[:version], types: types
+      err = Sourcerer::Error.new('get_package.multiple_packages_found', name: options[:name], version: options[:version], types: types)
 
       if options[:cli]
         err.print
-        package = prompt_for_package packages[:success]
+        return prompt_for_package packages[:success]
       else
         raise err
       end
     end
-
-    return package
   end
 
-  def print_package_errors failed_packages
-    failed_packages.each do |package|
+  def print_package_errors packages
+    packages.each do |package|
       package.errors.each do |error|
         error.print
       end

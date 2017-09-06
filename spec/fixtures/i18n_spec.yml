@@ -1,14 +1,13 @@
 spec:
   sourcerer:
     errors:
-      initialize:
+      get_package:
         no_package_found: no_package_found %{type} %{name}
         multiple_packages_found: multiple_packages_found %{name} %{version} %{types}
       package: &package
         method_not_defined: method_not_defined %{method_name} %{type}
-        download_fail: download_fail %{name} %{version}
-        search_fail: search_fail %{type} %{name}
-        version_fail: version_fail %{name} %{version}
+        install:
+          download_fail: download_fail %{name} %{version}
 
         # PACKAGE ERRORS
         bower:
@@ -18,6 +17,8 @@ spec:
           <<: *package
         git:
           <<: *package
+          versions:
+            github: 'asddads'
         local:
           <<: *package
         npm:

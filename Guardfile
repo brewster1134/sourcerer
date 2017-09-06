@@ -16,3 +16,7 @@ guard :rspec, cmd: 'bundle exec rspec' do
   watch(%r{^.*lib/sourcerer/package_types/.+\.rb$}) { |m| 'spec/lib/sourcerer/package_spec.rb' }
   watch('spec/spec_helper.rb')                      { 'spec' }
 end
+
+guard :yard do
+  watch(%r{^lib/.+\.rb$})
+end

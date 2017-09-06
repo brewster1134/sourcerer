@@ -8,28 +8,28 @@ class Sourcerer
       def search
         d, @user, @repo = name.match(GIT_REGEX).to_a
 
-        @remote_source = does_remote_repo_exist @user, @repo
+        @repo_source = get_repo_source @user, @repo
 
-        !!@remote_source
+        !!@repo_source
       end
 
       # @see Sourcerer::Package#versions
       #
       def versions
-        case @remote_source
+        case @repo_source
         when :github
           begin
-            @releases_json = JSON.load(RestClient.get("https://api.github.com/repos/#{@user}/#{@repo}/releases"))
-            @releases_versions = @releases_json.map{ |v| v['tag_name'] }
+            @releases_json = JSON.load(@releases_response)
+            @releases_array = @releases_json.map{ |v| v['name'] }
             @tags_json = JSON.load(RestClient.get("https://api.github.com/repos/#{@user}/#{@repo}/tags"))
-            @tags_versions = @tags_json.map{ |v| v['name'] }
+            @tags_array = @tags_json.map{ |v| v['name'] }
 
-            (@releases_versions + @tags_versions).uniq
-          rescue
-            add_error 'versions.github'
-            nil
+            (@releases_array + @tags_array).uniq
+          rescue => e
+            add_error 'versions.github', message: JSON.load(e.response)['message']
           end
         when :bitbucket
+          nil
         else
           nil
         end
@@ -38,12 +38,12 @@ class Sourcerer
       # @see Sourcerer::Package#download
       #
       def download to:
-        case @remote_source
+        case @repo_source
         when :github
-          tar_url = if @releases_versions.include? version
-            @releases_json.first{ |v| v['tag_name'] }['tarball_url']
-          elsif @tags_versions.include? version
-            @tags_json.first{ |v| v['name'] }['tarball_url']
+          tar_url = if @releases_array.include? version.to_s
+            @releases_json.first{ |v| v['name'] == version.to_s }['tarball_url']
+          elsif @tags_array.include? version.to_s
+            @tags_json.first{ |v| v['name'] == version.to_s }['tarball_url']
           end
 
           download_tar url: tar_url, to: to
@@ -60,9 +60,9 @@ class Sourcerer
 
       private
 
-      def does_remote_repo_exist user, repo
-        return :github if RestClient.get("https://github.com/#{user}/#{repo}") rescue false
-        return :bitbucket if RestClient.get("https://bitbucket.org/#{user}/#{repo}") rescue false
+      def get_repo_source user, repo
+        return :github if @releases_response = RestClient.get("https://api.github.com/repos/#{user}/#{repo}/releases")
+        return :bitbucket if @releases_response = RestClient.get("https://bitbucket.org/#{user}/#{repo}")
         return nil
       end
 

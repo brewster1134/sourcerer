@@ -28,6 +28,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'guard-bundler', '>0'
   s.add_development_dependency 'guard-rubocop', '>0'
   s.add_development_dependency 'guard-rspec', '>0'
+  s.add_development_dependency 'guard-yard', '>0'
   s.add_development_dependency 'rspec', '>0'
   s.add_development_dependency 'terminal-notifier', '>0'
   s.add_development_dependency 'terminal-notifier-guard', '>0'

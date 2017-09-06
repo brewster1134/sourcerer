@@ -16,34 +16,31 @@ class Sourcerer
     #   }
     #
     def self.search **options
-      types = [options[:type]].flatten.map(&:to_sym)
-
       packages = {
         success: [],
         fail: []
       }
 
-      # search multiple package types
-      if types.include? :any
+      if options[:type] == :any
         subclasses.each do |subclass_type, subclass|
-          package = subclass.new options
+          package = subclass.new(options)
+
           if package.version
             packages[:success] << package
           else
             packages[:fail] << package
           end
+        end
+      elsif subclass = subclasses[options[:type].to_sym]
+        package = subclass.new(options)
+
+        if package.version
+          packages[:success] << package
+        else
+          packages[:fail] << package
         end
       else
-        types.each do |t|
-          subclass = subclasses[t.to_sym]
-
-          package = subclass.new options
-          if package.version
-            packages[:success] << package
-          else
-            packages[:fail] << package
-          end
-        end
+        raise Sourcerer::Error.new('package.search.invalid_type', type: options[:type])
       end
 
       return packages
@@ -82,7 +79,7 @@ class Sourcerer
       pre_install if respond_to? :pre_install
 
       # create cache directory
-      cache_dir = File.join(Sourcerer::DEFAULT_CACHE_DIRECTORY, name, version.to_s)
+      cache_dir = File.join(Sourcerer::DEFAULT_CACHE_DIRECTORY, name.gsub(Sourcerer::DEFAULT_FILE_SYSTEM_SAFE_SUB, '_'), version.to_s.gsub(Sourcerer::DEFAULT_FILE_SYSTEM_SAFE_SUB, '_'))
       cache_contents = ->{ Dir.glob("#{cache_dir}/*") }
 
       if force || cache_contents.call.empty?
@@ -91,7 +88,7 @@ class Sourcerer
       end
 
       if cache_contents.call.empty?
-        add_error 'download_fail', name: name, version: version
+        add_error 'install.download_fail', name: name, version: version
         return false
       end
 
@@ -130,17 +127,19 @@ class Sourcerer
       @force = options[:force]
       @name = options[:name]
       @type = self.class.class_variable_get(:@@type)
-      @version = options[:version]
 
       # If no source was found, add a generic error as the first error
-      unless search
-        add_error 'search_fail', name: name, type: type
+      begin
+        search
+      rescue Sourcerer::Error => e
+        @errors << e
         return
       end
 
-      @version = find_matching_version version: version, versions_array: versions
-      unless @version
-        add_error 'version_fail', name: name, version: version
+      begin
+        @version = find_matching_version version: options[:version], versions_array: versions
+      rescue Sourcerer::Error => e
+        @errors << e
         return
       end
     end

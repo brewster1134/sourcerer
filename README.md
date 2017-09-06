@@ -166,3 +166,4 @@ add_error 'foo.download.problem_y', foo: 'bar'    # 3
 2. Further namespace your error with the name of the type & the method `foo.search`
 3. Optionally you can pass values into your error using the format `%{foo}`
 4. write a .sourcerer file to project
+5. some kind of symlink solution to maintain the same source file even if the version changes (jquery.js vs jquery-1.2.3.js)

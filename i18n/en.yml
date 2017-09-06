@@ -1,14 +1,13 @@
 en: &en
   sourcerer:
     errors:
-      initialize:
-        no_package_found: No %{type} package for %{name} was found. Verify that the name and type are correct
-        multiple_packages_found: Multiple packages for %{name}#%{version} were found. Set the type to one of... %{types}
+      get_package:
+        no_package_found: No %{type} package for %{name} with version %{version} was found. Verify that the name and type are correct
+        multiple_packages_found: "Multiple packages for %{name}#%{version} were found. Set the type to: %{types}"
       package: &package
         method_not_defined: No %{method_name} method is defined for the %{type} package type
-        download_fail: "%{name}#%{version} was unable to be downloaded"
-        search_fail: No %{type} package named %{name} could be found
-        version_fail: No %{name} package for %{version} could be found
+        install:
+          download_fail: "%{name}#%{version} was unable to be downloaded"
 
         # PACKAGE ERRORS
         bower:
@@ -18,6 +17,8 @@ en: &en
           <<: *package
         git:
           <<: *package
+          versions:
+            github: 'asddads'
         local:
           <<: *package
         npm:

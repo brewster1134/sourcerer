@@ -8,12 +8,12 @@ RSpec.describe Sourcerer::Packages::Git do
       allow(@git_package).to receive(:name).and_return 'brewster1134/sourcerer'
 
       expect(@git_package).to receive(:name).ordered
-      expect(@git_package).to receive(:does_remote_repo_exist).with('brewster1134', 'sourcerer').ordered
+      expect(@git_package).to receive(:get_repo_source).with('brewster1134', 'sourcerer').ordered
     end
 
     context 'if git repo is found' do
       before do
-        allow(@git_package).to receive(:does_remote_repo_exist).and_return true
+        allow(@git_package).to receive(:get_repo_source).and_return true
 
         @git_search = @git_package.search
       end
@@ -25,7 +25,7 @@ RSpec.describe Sourcerer::Packages::Git do
 
     context 'if git repo is not found' do
       before do
-        allow(@git_package).to receive(:does_remote_repo_exist).and_return false
+        allow(@git_package).to receive(:get_repo_source).and_return false
 
         @git_search = @git_package.search
       end

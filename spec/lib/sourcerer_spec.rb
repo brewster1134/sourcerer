@@ -17,14 +17,15 @@ RSpec.describe Sourcerer do
 
   describe '#initialize' do
     before do
-      @options = { options: true }
-      @package = Sourcerer::Package.allocate
       @sourcerer = Sourcerer.allocate
+      @package = Sourcerer::Package.allocate
+      @error = Sourcerer::Error.allocate
+      @options = { cli: false }
 
-      allow(Sourcerer::Package).to receive(:search).and_return(:packages)
-      allow(@package).to receive(:install)
+      allow(Sourcerer::Package).to receive(:search)
       allow(@sourcerer).to receive(:get_package).and_return(@package)
-      allow(@sourcerer).to receive(:print_package_errors)
+      allow(@package).to receive(:install)
+      allow(@error).to receive(:print)
     end
 
     after do
@@ -33,33 +34,32 @@ RSpec.describe Sourcerer do
 
     context 'when package is found' do
       before do
-        allow(@package).to receive(:version).and_return(true)
+        allow(@sourcerer).to receive(:get_package).and_return(@package)
 
         @sourcerer.send :initialize, @options
       end
 
       it 'should install the package' do
         expect(Sourcerer::Package).to have_received(:search).with(@options).ordered
-        expect(@sourcerer).to have_received(:get_package).with(:packages, @options).ordered
-        expect(@package).to have_received(:version).ordered
+        expect(@sourcerer).to have_received(:get_package).with(nil, @options).ordered
         expect(@package).to have_received(:install).ordered
-        expect(@sourcerer).to_not have_received(:print_package_errors)
       end
     end
 
     context 'when package is not found' do
       before do
-        allow(@package).to receive(:version).and_return(false)
+        allow(@sourcerer).to receive(:get_package).and_raise(@error)
 
-        @sourcerer.send :initialize, @options
+        @return = -> { @sourcerer.send :initialize, @options }
       end
 
       it 'should not install the package and show the errors' do
-        expect(Sourcerer::Package).to have_received(:search).with(@options).ordered
-        expect(@sourcerer).to have_received(:get_package).with(:packages, @options).ordered
-        expect(@package).to have_received(:version).ordered
-        expect(@package).to_not have_received(:install)
-        expect(@sourcerer).to have_received(:print_package_errors).with([ @package ]).ordered
+        expect{ @return.call }.to raise_error do |e|
+          expect(e).to be(@error)
+          expect(Sourcerer::Package).to have_received(:search).with(@options).ordered
+          expect(@sourcerer).to have_received(:get_package).with(nil, @options).ordered
+          expect(@package).to_not have_received(:install)
+        end
       end
     end
   end
@@ -67,15 +67,17 @@ RSpec.describe Sourcerer do
   describe '#get_package' do
     before do
       @error = Sourcerer::Error.allocate
-      @options = { cli: true, type: [:spec] }
+      @options = { cli: false }
       @package = Sourcerer::Package.allocate
       @sourcerer = Sourcerer.allocate
+
+      @sourcerer.instance_variable_set '@errors', []
 
       allow(Sourcerer::Error).to receive(:new).and_return(@error)
       allow(@error).to receive(:print)
       allow(@package).to receive(:type).and_return('foo', 'bar')
-      allow(@sourcerer).to receive(:print_package_errors)
       allow(@sourcerer).to receive(:prompt_for_package)
+      allow(@sourcerer).to receive(:print_package_errors)
     end
 
     after do
@@ -84,29 +86,19 @@ RSpec.describe Sourcerer do
 
     context 'when no packages are found' do
       before do
-        @return = @sourcerer.send(:get_package, { success: [], fail: [:error] }, @options)
+        @return = -> { @sourcerer.send(:get_package, { success: [], fail: [:error] }, @options) }
       end
 
-      it 'should show package errors' do
-        expect(Sourcerer::Error).to have_received(:new).ordered
-        expect(@error).to have_received(:print).ordered
-        expect(@sourcerer).to have_received(:print_package_errors).with([:error]).ordered
-      end
-
-      it 'should return nil' do
-        expect(@return).to be_nil
+      it 'raise an error' do
+        expect{ @return.call }.to raise_error do |e|
+          expect(e).to be(@error)
+        end
       end
     end
 
     context 'when 1 package is found' do
       before do
         @return = @sourcerer.send(:get_package, { success: [@package], fail: [] }, @options)
-      end
-
-      it 'should install the package' do
-        expect(Sourcerer::Error).to_not have_received(:new)
-        expect(@error).to_not have_received(:print)
-        expect(@sourcerer).to_not have_received(:print_package_errors)
       end
 
       it 'should return the package' do
@@ -116,17 +108,13 @@ RSpec.describe Sourcerer do
 
     context 'when multiple packages are found' do
       before do
-        @return = @sourcerer.send(:get_package, { success: [@package, @package], fail: [] }, @options)
+        @return =-> { @sourcerer.send(:get_package, { success: [@package, @package], fail: [] }, @options) }
       end
 
-      it 'should create an error' do
-        expect(Sourcerer::Error).to have_received(:new).with(String, hash_including({ types: 'foo, bar' })).ordered
-        expect(@error).to have_received(:print).ordered
-        expect(@sourcerer).to_not have_received(:print_package_errors)
-      end
-
-      it 'should return nil' do
-        expect(@return).to be_nil
+      it 'raise an error' do
+        expect{ @return.call }.to raise_error do |e|
+          expect(e).to be(@error)
+        end
       end
     end
   end

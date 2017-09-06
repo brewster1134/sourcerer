@@ -56,7 +56,7 @@ RSpec.describe Sourcerer::Package do
         @packages = Sourcerer::Package.search name: 'name', version: '1.2.3', type: :any
       end
 
-      it 'should search each package type' do
+      it 'should init all package types' do
         expect(SearchFoo).to have_received(:new).with(name: 'name', version: '1.2.3', type: :any)
         expect(SearchBar).to have_received(:new).with(name: 'name', version: '1.2.3', type: :any)
         expect(SearchBaz).to have_received(:new).with(name: 'name', version: '1.2.3', type: :any)
@@ -65,25 +65,6 @@ RSpec.describe Sourcerer::Package do
       it 'should return an array with the packages' do
         expect(@packages).to eq({
           success: [@package_foo, @package_bar, @package_baz],
-          fail: []
-        })
-      end
-    end
-
-    context 'when searching multiple types' do
-      before do
-        @packages = Sourcerer::Package.search name: 'name', version: '1.2.3', type: [:type_one, :type_three]
-      end
-
-      it 'should search only the specific package types' do
-        expect(SearchFoo).to have_received(:new).with(name: 'name', version: '1.2.3', type: [:type_one, :type_three])
-        expect(SearchBar).to_not have_received(:new)
-        expect(SearchBaz).to have_received(:new).with(name: 'name', version: '1.2.3', type: [:type_one, :type_three])
-      end
-
-      it 'should return an array with the packages' do
-        expect(@packages).to eq({
-          success: [@package_foo, @package_baz],
           fail: []
         })
       end
@@ -206,7 +187,7 @@ RSpec.describe Sourcerer::Package do
 
         it 'should run in the right order' do
           expect(@package).to have_received(:download).with({ to: @package_cache_dir }).ordered
-          expect(@package).to have_received(:add_error).with('download_fail', Hash).ordered
+          expect(@package).to have_received(:add_error).with('install.download_fail', Hash).ordered
           expect(FileUtils).to_not have_received(:cp_r)
         end
       end
@@ -259,6 +240,7 @@ RSpec.describe Sourcerer::Package do
   describe '#initialize' do
     before do
       Sourcerer::Package.class_variable_set :@@type, :spec
+      @error = Sourcerer::Error.allocate
       @package = Sourcerer::Package.allocate
 
       allow(@package).to receive(:versions)
@@ -266,12 +248,11 @@ RSpec.describe Sourcerer::Package do
 
     context 'when search for the package fails' do
       before do
-        allow(@package).to receive(:search).and_return false
+        allow(@package).to receive(:search).and_raise(@error)
       end
 
       it 'should not try to match the version' do
         expect(@package).to receive(:search).ordered
-        expect(@package).to receive(:add_error).ordered
         expect(@package).to_not receive(:find_matching_version)
 
         @package.send(:initialize, name: 'package_foo', version: '1.2.3', destination: 'destination')
@@ -281,14 +262,13 @@ RSpec.describe Sourcerer::Package do
     context 'when finding a version fails' do
       before do
         allow(@package).to receive(:search).and_return true
-        allow(@package).to receive(:find_matching_version).and_return false
+        allow(@package).to receive(:find_matching_version).and_raise(@error)
       end
 
       it 'should try to match the version' do
         expect(@package).to receive(:search).ordered
         expect(@package).to receive(:versions).ordered
         expect(@package).to receive(:find_matching_version).ordered
-        expect(@package).to receive(:add_error).ordered
 
         @package.send(:initialize, name: 'package_foo', version: 'version', destination: 'destination')
       end
@@ -303,7 +283,6 @@ RSpec.describe Sourcerer::Package do
       it 'should set the version' do
         expect(@package).to receive(:search).ordered
         expect(@package).to receive(:find_matching_version).ordered
-        expect(@package).to_not receive(:add_error)
 
         @package.send(:initialize, name: 'package_foo', version: 'version', destination: 'destination')
 

@@ -1,3 +1,9 @@
+module Semantic
+  class Version
+    attr_accessor :remote_version
+  end
+end
+
 class Sourcerer
   module Version
     # Searchs for a matching version based on user criteria and available versions
@@ -10,11 +16,10 @@ class Sourcerer
       # handle special tags
       return latest if version == :latest
 
-      puts version, versions_array
-
       # if version has a semantic version wildcard/operator
-      if version.is_a?(String) && version.match(Sourcerer::SEMANTIC_VERSION_WILDCARD_REGEX)
-        find_matching_semantic_version criteria: version, versions_array: versions_array
+      if version.to_s.match(Sourcerer::SEMVER_PARTIAL_REGEX)
+        sem_ver = find_matching_semantic_version criteria: version, versions_array: versions_array
+        sem_ver.remote_version
       elsif versions_array.include? version.to_s
         version.to_s
       else
@@ -32,8 +37,16 @@ class Sourcerer
 
       # create filter variables
       filters = []
-      filtered_versions = versions_array.dup.map{ |ver| Semantic::Version.new(ver) rescue nil }.compact
-      puts filtered_versions.inspect
+      filtered_versions = versions_array.dup.map do |ver|
+        begin
+          sem_ver = Semantic::Version.new(ver.match(Sourcerer::SEMVER_COMPLETE_REGEX)[1])
+          sem_ver.remote_version = ver
+          sem_ver
+        rescue
+          nil
+        end
+      end.compact
+
       # no operator
       # if operator == nil && minor != 'x' && patch != 'x' && pre_major != 'x' && pre_minor != 'x' && pre_patch != 'x'
       if operator.empty? && !has_placeholder
@@ -74,10 +87,8 @@ class Sourcerer
     end
 
     def filter_versions versions_array:, operator:, version:
-      sem_ver = Semantic::Version.new(version)
-
       versions_array.select do |v|
-        v.send operator.to_sym, sem_ver
+        v.send operator.to_sym, version
       end
     end
 
@@ -87,7 +98,7 @@ class Sourcerer
     #
     def get_valid_semantic_version criteria:, increment: false
       # create copy of criteria area and replace .x placeholder
-      criteria_array = criteria.match(Sourcerer::SEMANTIC_VERSION_ARTIFACT_REGEX).to_a
+      criteria_array = criteria.match(Sourcerer::SEMVER_ARTIFACT_REGEX).to_a
       criteria_array_copy = criteria_array.dup.map{ |x| x == 'x' ? '0' : x }
 
       # remove operator
