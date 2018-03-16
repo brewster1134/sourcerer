@@ -114,8 +114,7 @@ class Sourcerer
         # INSERT SEARCH LOGIC HERE          # 3.1
         return 'source'                     # 3.2
 
-        add_error 'foo.search.problem_x'    # 5
-        return false                        # 3.3
+        raise Sourcerer::Error.new 'foo.search.problem_x'
       end
 
       # @see Sourcerer::Package#download
@@ -124,8 +123,7 @@ class Sourcerer
         # INSERT DOWNLOAD LOGIC HERE        # 4.1
         return '/path/to/tmp/dir'           # 4.2
 
-        add_error 'foo.download.problem_y'  # 5
-        return false                        # 4.3
+        raise Sourcerer::Error.new 'foo.download.problem_y'
       end
     end
   end
@@ -142,8 +140,6 @@ end
   1. Write code to download the package from the `source` to a tmp directory
   2. If download completes return the path to the tmp directory
   3. If download fails, `return false`
-5. If an error occurs, call the `add_error` method
-  * _see below_
 
 ```yaml
 en: &en
@@ -155,11 +151,6 @@ en: &en
             problem_x: Describe problem X         # 2
           download:
             problem_y: Describe problem Y %{foo}  # 3
-```
-
-```ruby
-add_error 'foo.search.problem_x'                  # 2
-add_error 'foo.download.problem_y', foo: 'bar'    # 3
 ```
 
 1. Add i18n values for your errors, namespaced with `en.sourcerer.errors.packages`

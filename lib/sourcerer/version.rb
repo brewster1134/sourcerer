@@ -18,8 +18,12 @@ class Sourcerer
 
       # if version has a semantic version wildcard/operator
       if version.to_s.match(Sourcerer::SEMVER_PARTIAL_REGEX)
-        sem_ver = find_matching_semantic_version criteria: version, versions_array: versions_array
-        sem_ver.remote_version
+        begin
+          sem_ver = find_matching_semantic_version criteria: version, versions_array: versions_array
+          sem_ver.remote_version
+        rescue StandardError
+          raise Sourcerer::Error.new 'version.find_matching_version.no_matching_semantic_version_found', name: name, version: version.to_s
+        end
       elsif versions_array.include? version.to_s
         version.to_s
       else

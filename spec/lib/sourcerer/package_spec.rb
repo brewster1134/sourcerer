@@ -93,36 +93,6 @@ RSpec.describe Sourcerer::Package do
   #
   # PUBLIC INSTANCE METHODS
   #
-  describe '#add_error' do
-    before do
-      @package = Sourcerer::Package.allocate
-      @package.instance_variable_set :@errors, [:foo]
-      @package.instance_variable_set :@type, :bar
-
-      allow(Sourcerer::Error).to receive(:new).and_return :bar
-    end
-
-    after do
-      allow(Sourcerer::Error).to receive(:new).and_call_original
-    end
-
-    it 'should add an error from the package parent class' do
-      allow(@package.class).to receive(:name).and_return 'Sourcerer::Package'
-      result = @package.add_error 'error'
-
-      expect(Sourcerer::Error).to have_received(:new).with 'package.error', Hash
-      expect(result).to eq [:bar, :foo]
-    end
-
-    it 'should add an error from a type subclass' do
-      allow(@package.class).to receive(:name).and_return 'Sourcerer::Packages::Foo'
-      result = @package.add_error 'error'
-
-      expect(Sourcerer::Error).to have_received(:new).with 'package.bar.error', Hash
-      expect(result).to eq [:foo, :bar]
-    end
-  end
-
   describe '#install' do
     before do
       @package = Sourcerer::Package.allocate
@@ -136,7 +106,6 @@ RSpec.describe Sourcerer::Package do
       allow(FileUtils).to receive(:mkdir_p)
       allow(FileUtils).to receive(:cp_r)
       allow(@package).to receive(:download)
-      allow(@package).to receive(:add_error)
       allow(@package).to receive(:name).and_return('foo')
       allow(@package).to receive(:version).and_return('1.2.3')
       allow(@package).to receive(:destination).and_return(@package_dir)
@@ -158,7 +127,6 @@ RSpec.describe Sourcerer::Package do
 
       it 'should copy the cached package' do
         expect(@package).to_not have_received(:download)
-        expect(@package).to_not have_received(:add_error)
         expect(FileUtils).to have_received(:cp_r).with("#{@package_cache_dir}/.", @destination).ordered
       end
     end
@@ -173,7 +141,6 @@ RSpec.describe Sourcerer::Package do
 
         it 'should run in the right order' do
           expect(@package).to have_received(:download).with({ to: @package_cache_dir }).ordered
-          expect(@package).to_not have_received(:add_error)
           expect(FileUtils).to have_received(:cp_r).with("#{@package_cache_dir}/.", @destination).ordered
         end
       end
@@ -187,7 +154,6 @@ RSpec.describe Sourcerer::Package do
 
         it 'should run in the right order' do
           expect(@package).to have_received(:download).with({ to: @package_cache_dir }).ordered
-          expect(@package).to have_received(:add_error).with('install.download_fail', Hash).ordered
           expect(FileUtils).to_not have_received(:cp_r)
         end
       end
@@ -246,16 +212,20 @@ RSpec.describe Sourcerer::Package do
       allow(@package).to receive(:versions)
     end
 
-    context 'when search for the package fails' do
+    context 'when search fails' do
       before do
         allow(@package).to receive(:search).and_raise(@error)
+
+        @result = ->{ @package.send(:initialize, name: 'package_foo', version: '1.2.3', destination: 'destination') }
       end
 
       it 'should not try to match the version' do
-        expect(@package).to receive(:search).ordered
-        expect(@package).to_not receive(:find_matching_version)
-
-        @package.send(:initialize, name: 'package_foo', version: '1.2.3', destination: 'destination')
+        expect{ @result.call }.to raise_error do |e|
+          expect(e).to be_a Sourcerer::Error
+          expect(@package).to have_received(:search).ordered
+          expect(@package).to_not receive(:find_matching_version)
+          expect(@package).to_not receive(:versions)
+        end
       end
     end
 

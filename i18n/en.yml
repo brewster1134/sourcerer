@@ -8,11 +8,16 @@ en: &en
         method_not_defined: No %{method_name} method is defined for the %{type} package type
         install:
           download_fail: "%{name}#%{version} was unable to be downloaded"
+        version:
+          find_matching_version:
+            no_matching_semantic_version_found: No version of %{name} could be found with a version matching %{version}
 
         # PACKAGE ERRORS
         bower:
           <<: *package
           get_url: No url was found for the bower %{name} package
+          search:
+            no_bower_package_found: No url was found for bower package %{name}
         gem:
           <<: *package
         git:

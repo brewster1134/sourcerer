@@ -62,38 +62,37 @@ class Sourcerer
   private
 
   def initialize **options
+    Sourcerer::Error.cli = options[:cli]
+
     packages = Sourcerer::Package.search options
 
     @package = get_package packages, options
     @package.install
   rescue Sourcerer::Error => e
-    options[:cli] ? e.print : raise(e)
+    e.print
   end
 
   def get_package packages, **options
     case packages[:success].length
     when 0
-      print_package_errors packages[:fail]
+      print_package_errors packages[:fail], true
       raise Sourcerer::Error.new('get_package.no_package_found', name: options[:name], type: options[:type], version: options[:version])
     when 1
       return packages[:success].first
     else
       types = packages[:success].collect { |package| package.type.to_s }.join(', ')
-      err = Sourcerer::Error.new('get_package.multiple_packages_found', name: options[:name], version: options[:version], types: types)
+      e = Sourcerer::Error.new('get_package.multiple_packages_found', name: options[:name], version: options[:version], types: types)
+      e.print
 
-      if options[:cli]
-        err.print
-        return prompt_for_package packages[:success]
-      else
-        raise err
-      end
+      return prompt_for_package packages[:success] if options[:cli]
+      raise e
     end
   end
 
-  def print_package_errors packages
+  def print_package_errors packages, cli
     packages.each do |package|
-      package.errors.each do |error|
-        error.print
+      package.errors.each do |e|
+        e.print
       end
     end
   end

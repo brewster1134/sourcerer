@@ -7,9 +7,8 @@ class Sourcerer
         begin
           @npm_json = JSON.load(RestClient.get("http://registry.npmjs.org/#{name}"))
           return true
-        rescue
-          add_error 'no package'
-          return false
+        rescue StandardError => e
+          raise Sourcerer::Error.new 'no package'
         end
       end
 

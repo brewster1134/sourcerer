@@ -6,13 +6,9 @@ class Sourcerer
       def search
         # check to see if package exists
         git_url = get_git_url name: name
-        return false if git_url.nil?
 
         # search for package with the url, and return false unless a single package isn't found
         @git_package = Sourcerer.install(git_url, cli: cli, destination: destination, force: force, type: :git, version: version).package
-        return false if @git_package.version.nil?
-
-        @git_package.install
 
         return true
       end
@@ -40,8 +36,8 @@ class Sourcerer
       def get_git_url name:
         response = RestClient.get "http://bower.herokuapp.com/packages/#{name}"
         JSON.load(response)['url']
-      rescue
-        nil
+      rescue StandardError => e
+        raise Sourcerer::Error.new 'search.no_bower_package_found', name: name
       end
     end
   end

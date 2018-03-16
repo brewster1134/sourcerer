@@ -25,8 +25,8 @@ class Sourcerer
             @tags_array = @tags_json.map{ |v| v['name'] }
 
             (@releases_array + @tags_array).uniq
-          rescue => e
-            add_error 'versions.github', message: JSON.load(e.response)['message']
+          rescue StandardError => e
+            raise Sourcerer::Error.new 'versions.github', message: JSON.load(e.response)['message']
           end
         when :bitbucket
           nil
